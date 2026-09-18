@@ -16,13 +16,22 @@
 
 ## 這個 repo 的結構
 
+七個里程碑資料夾已經幫你建好了，每個裡面都有一份 `README.md`，寫著那一站要交什麼、截止時間，以及你要填的反思與 AI 揭露欄。**資料夾名稱不要改、不要搬位置**，老師整學期都從這七個資料夾看你的進度。
+
 ```
-AGENTS.md        ← 你的 AI 工作流與課堂公約（agy、Codex 自動讀，M0 就寫下三條自己的規則，之後持續補）
-CLAUDE.md        ← 給 Claude Code 的入口，第一行把 AGENTS.md 接進來
-.devcontainer/   ← 雲端工作室的環境定義（Claude Code 已預裝），你不用動它
+AGENTS.md         ← 你的 AI 工作流與課堂公約（agy、Codex 自動讀，M0 就寫下三條自己的規則，之後持續補）
+CLAUDE.md         ← 給 Claude Code 的入口，第一行把 AGENTS.md 接進來
+.devcontainer/    ← 雲端工作室的環境定義（Claude Code 已預裝），你不用動它
+m0-outfit/        ← M0 裝備（9/24）：會呼吸的圓已經放在裡面，讓 AI 出錯的截圖也放這
+m1-world/         ← M1 世界（10/1，報告站）：世界觀研究報告＋m1-簡報.pdf
+m2-species/       ← M2 物種（10/15，報告站）：物種設定書、會動的雛形＋m2-簡報.pdf
+m3-creature/      ← M3 個體（11/12，報告站）：有天性的個體＋m3-簡報.pdf
+m4-population/    ← M4 族群（12/3）：一群牠
+m5-habitat/       ← M5 棲地（12/17）：棲地與互動
+m6-zoo/           ← M6 開園（12/24，報告站）：展出版本＋m6-簡報.pdf
 ```
 
-每一站自己建一個資料夾，名稱照這七個：`m0-outfit`、`m1-world`、`m2-species`、`m3-creature`、`m4-population`、`m5-habitat`、`m6-zoo`。課前準備與物種日誌寫在當站資料夾的 `notes.md`。
+每一站的資料夾裡：作品檔案直接放進去，`README.md` 填反思與 AI 揭露欄，過程筆記與物種日誌寫 `notes.md`（需要時自己建）。
 
 ## 交作業（四件套）
 
@@ -47,7 +56,7 @@ CLAUDE.md        ← 給 Claude Code 的入口，第一行把 AGENTS.md 接進�
 
 ## 第一次試跑（M0 的程式碼就用它）
 
-在 repo 裡建 `m0-outfit/` 資料夾，裡面放兩個檔案（可以請你的 AI 帶你建）：
+`m0-outfit/` 裡已經放好兩個檔案，你不用自己建，內容長這樣：
 
 **`m0-outfit/index.html`**
 
