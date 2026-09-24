@@ -14,10 +14,11 @@
 
 ## 2. 專案資訊與里程碑進度 (Post-Future Zoo)
 - **專案目錄**：`/Users/cheng-kuanglee/post-future-zoo`
-- **當前里程碑**：**M0 裝備**
+- **遠端倉庫**：[ambre-ctrl/test1](https://github.com/ambre-ctrl/test1)
+- **當前里程碑**：**M0 裝備（已完成並上傳）**
 - **里程碑全覽**：
   - [x] 專案環境初始化（已導入課程官方範本結構）
-  - [ ] **M0 裝備 (9/24)**：第一次試跑（呼吸圓）、讓 AI 出錯實驗截圖 [x]、README.md 反思與 AI 揭露欄 [x]
+  - [x] **M0 裝備 (9/24)**：第一次試跑（呼吸圓）、讓 AI 出錯實驗截圖 [x]、README.md 反思與 AI 揭露欄 [x]、推送至 GitHub [x]
   - [ ] **M1 世界 (10/1，報告站)**：世界觀研究報告＋m1-簡報.pdf
   - [ ] **M2 物種 (10/15，報告站)**：物種設定書、會動的雛形＋m2-簡報.pdf
   - [ ] **M3 個體 (11/12，報告站)**：有天性的個體＋m3-簡報.pdf
@@ -36,10 +37,10 @@
 ---
 
 ## 4. 當前行動與待辦 (TODO)
-- [ ] 執行 M0 試跑：確認打開 `m0-outfit/index.html` 觀看呼吸圓。
+- [x] 執行 M0 試跑：會呼吸的圓（`m0-outfit/index.html`）。
 - [x] 創作者親撰 `m0-outfit/README.md` 反思區塊（已加入）。
 - [x] 執行 M0「讓 AI 出錯實驗」：詢問莫札特紐約演出的假前提問題，誘發 AI 偽歷史推論。
 - [x] 截圖已歸檔至 `m0-outfit/ai-error.png` 並嵌入 `m0-outfit/README.md`。
 - [x] 完成 `m0-outfit/README.md` AI 揭露欄填寫。
-- [ ] 創作者確認是否已在 GitHub 上按「Use this template」開出個人公開 repo 並更新 remote。
+- [x] 設定遠端 Repo 為 `ambre-ctrl/test1` 並成功推送至 GitHub。
 - [ ] 邁向 M1：啟動「後未來動物園」世界觀與推測物種發想。
