@@ -11,7 +11,7 @@
 ## 這一站要交的四件套
 
 - [x] 程式碼：會動的雛形（`index.html` 與 `sketch.js`）
-- [x] 截圖或影片：牠動起來的樣子（`m2-species-preview.png`、`m2-species-creep.png`、`m2-species-crush.png`）
+- [x] 截圖或影片：牠動起來的樣子（截圖組與螢幕錄影 `m2-species-demo.mov`）
 - [ ] 反思：下面那段，一百到兩百字，自己寫（請見下方反思區）
 - [x] AI 揭露欄：下面的表格
 - [x] 簡報 PDF：檔名 `m2-簡報.pdf`，放這個資料夾裡；物種設定書五欄也放這裡
