@@ -1,0 +1,283 @@
+
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>後未來動物園 M1 簡報</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+
+  @page {
+    size: 1920px 1080px;
+    margin: 0;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background-color: #0b0f17;
+    color: #e2e8f0;
+    font-family: -apple-system, BlinkMacSystemFont, "Space Grotesk", "Noto Sans TC", "PingFang TC", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .slide {
+    width: 1920px;
+    height: 1080px;
+    position: relative;
+    padding: 70px 90px;
+    background: radial-gradient(circle at 80% 20%, rgba(16, 185, 129, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 10% 80%, rgba(56, 189, 248, 0.06) 0%, transparent 40%),
+                #0b0f17;
+    overflow: hidden;
+    page-break-after: always;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* 裝飾光線與線條 */
+  .grid-bg {
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+  }
+
+  /* 頂部 Header */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 20px;
+    margin-bottom: 40px;
+    z-index: 10;
+  }
+
+  .tag-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #10b981;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .tag-badge.cyan {
+    background: rgba(56, 189, 248, 0.15);
+    border-color: rgba(56, 189, 248, 0.4);
+    color: #38bdf8;
+  }
+
+  .tag-badge.amber {
+    background: rgba(245, 158, 11, 0.15);
+    border-color: rgba(245, 158, 11, 0.4);
+    color: #f59e0b;
+  }
+
+  .tag-badge.rose {
+    background: rgba(244, 63, 94, 0.15);
+    border-color: rgba(244, 63, 94, 0.4);
+    color: #f43f5e;
+  }
+
+  .meta-info {
+    font-size: 15px;
+    color: #64748b;
+    letter-spacing: 0.5px;
+  }
+
+  .title-group {
+    margin-bottom: 35px;
+    z-index: 10;
+  }
+
+  .main-title {
+    font-size: 42px;
+    font-weight: 900;
+    color: #ffffff;
+    letter-spacing: -0.5px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .sub-title {
+    font-size: 20px;
+    color: #94a3b8;
+    font-weight: 400;
+  }
+
+  /* 內容卡片共用 */
+  .card-container {
+    display: grid;
+    gap: 25px;
+    z-index: 10;
+    flex: 1;
+  }
+
+  .card {
+    background: rgba(30, 41, 59, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
+    border-radius: 18px;
+    padding: 30px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: #10b981;
+  }
+
+  .card.cyan::before { background: #38bdf8; }
+  .card.amber::before { background: #f59e0b; }
+  .card.rose::before { background: #f43f5e; }
+
+  .card-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #f8fafc;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .card-desc {
+    font-size: 16px;
+    color: #cbd5e1;
+    line-height: 1.7;
+  }
+
+  .card-desc strong {
+    color: #ffffff;
+    font-weight: 600;
+  }
+
+  ul.bullet-list {
+    list-style: none;
+    margin-top: 12px;
+  }
+
+  ul.bullet-list li {
+    font-size: 15px;
+    color: #cbd5e1;
+    line-height: 1.8;
+    position: relative;
+    padding-left: 20px;
+    margin-bottom: 6px;
+  }
+
+  ul.bullet-list li::before {
+    content: '▸';
+    position: absolute;
+    left: 0;
+    color: #10b981;
+  }
+
+  ul.bullet-list.cyan li::before { color: #38bdf8; }
+  ul.bullet-list.amber li::before { color: #f59e0b; }
+
+  /* 底部 Footer */
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 18px;
+    margin-top: auto;
+    font-size: 14px;
+    color: #64748b;
+    z-index: 10;
+  }
+</style>
+</head>
+<body>
+
+    <div class="slide" id="slide3">
+      <div class="grid-bg"></div>
+      <div class="header">
+        <span class="tag-badge rose">Phase 1 Deep Dive // 0 - 30 Years</span>
+        <span class="meta-info">塑膠狂歡與文明猝死</span>
+      </div>
+
+      <div class="title-group">
+        <h2 class="main-title">階段一：塑膠狂歡與現代文明的結構性猝死</h2>
+        <p class="sub-title">大阪堺菌突變株爆發：人類並非死於外星武器，而是死於隱形高分子網絡的熔斷</p>
+      </div>
+
+      <div class="card-container" style="grid-template-columns: repeat(3, 1fr);">
+        <div class="card rose">
+          <div class="card-title">
+            <span style="font-size: 28px;">🧫</span>
+            <span>微觀代謝爆發</span>
+          </div>
+          <p class="card-desc">
+            人類每年製造超過 <strong>4.6 億噸</strong> 塑膠，掩埋場與水系形成前所未有的「超級碳源庫」。
+          </p>
+          <ul class="bullet-list">
+            <li>大阪堺菌（<em>Ideonella sakaiensis</em>）衍生株在垃圾帶急速變異。</li>
+            <li>高活性 <strong>PETase</strong> 酵素在常溫下以百倍速率水解長鏈聚酯。</li>
+            <li>將原本不可降解的高分子快速分解為單體 <strong>MHET、TPA 與乙二醇</strong>。</li>
+          </ul>
+        </div>
+
+        <div class="card rose">
+          <div class="card-title">
+            <span style="font-size: 28px;">⚡</span>
+            <span>基礎設施連鎖溶解</span>
+          </div>
+          <p class="card-desc">
+            人類城市高度依賴聚合物，其溶解直接摧毀現代維生工程：
+          </p>
+          <ul class="bullet-list">
+            <li><strong>電網癱瘓</strong>：交聯聚乙烯（XLPE）與 PVC 電纜絕緣皮在數週內化為黏泥，引發全球大短路與城市大火。</li>
+            <li><strong>自來水噴發</strong>：PVC、HDPE 管壁穿孔破裂，高壓水流沖毀建築內部，引發室內瀑布。</li>
+            <li><strong>醫療歸零</strong>：無菌注射針筒、點滴管、透析膜在 30 天內脆化污染，抗生素與急救徹底失效。</li>
+          </ul>
+        </div>
+
+        <div class="card rose">
+          <div class="card-title">
+            <span style="font-size: 28px;">🏚️</span>
+            <span>景觀演變與人口滅絕</span>
+          </div>
+          <p class="card-desc">
+            缺乏電力、乾淨飲用水與無菌防護，人類社會在 30 年內迅速瓦解：
+          </p>
+          <ul class="bullet-list">
+            <li>全球人口在 30 年內驟降 <strong>95% 以上</strong>，工業生產體系徹底停擺。</li>
+            <li>地表所有化纖衣服、保特瓶、包裝膜全部水解沉澱為一層黑色發酵有機泥。</li>
+            <li>人類遺棄的城市建築失去氣密與防水密封，雨水直接長驅直入混凝土毛細孔。</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer">
+        <span>後未來動物園 M1 世界觀研究</span>
+        <span>Slide 3 / 8</span>
+      </div>
+    </div>
+    
+</body>
+</html>

@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>M2 物種：羽狀流體輪傘獸（三維步進水母）｜後未來動物園</title>
+    <!-- 本地優先載入，確保無網路環境亦能 100% 運行，另備 CDN 作為備援 -->
+    <script src="p5.min.js"></script>
+    <script>
+      if (typeof p5 === 'undefined') {
+        document.write('<script src="https://cdn.jsdelivr.net/npm/p5@2/lib/p5.min.js"><\/script>');
+      }
+    </script>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html, body {
+        width: 100%;
+        height: 100%;
+        background-color: #060911;
+        color: #f1f5f9;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang TC", sans-serif;
+        overflow: hidden;
+        user-select: none;
+      }
+      main {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        height: 100%;
+      }
+      #hud {
+        position: absolute;
+        top: 20px;
+        left: 25px;
+        background: rgba(10, 15, 29, 0.88);
+        border: 1px solid rgba(168, 85, 247, 0.35);
+        padding: 18px 24px;
+        border-radius: 14px;
+        backdrop-filter: blur(16px);
+        font-size: 13px;
+        line-height: 1.6;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 25px rgba(168, 85, 247, 0.15);
+        max-width: 440px;
+        z-index: 10;
+      }
+      #hud h1 {
+        font-size: 18px;
+        color: #e879f9;
+        margin-bottom: 4px;
+        letter-spacing: 0.5px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      #hud .tag {
+        font-size: 11px;
+        background: rgba(168, 85, 247, 0.22);
+        color: #d8b4fe;
+        padding: 2px 8px;
+        border-radius: 4px;
+        border: 1px solid rgba(168, 85, 247, 0.45);
+        font-weight: normal;
+      }
+      #hud .subtitle {
+        color: #94a3b8;
+        font-size: 12px;
+        margin-bottom: 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding-bottom: 8px;
+      }
+      .stat-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px 12px;
+        margin-bottom: 12px;
+        background: rgba(15, 23, 42, 0.7);
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .stat-item {
+        font-size: 11.5px;
+      }
+      .stat-label {
+        color: #64748b;
+      }
+      .stat-val {
+        color: #f1f5f9;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-weight: 600;
+      }
+
+      /* 互動模式按鈕群 */
+      .mode-switcher {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 14px;
+      }
+      .mode-btn {
+        flex: 1;
+        background: rgba(30, 41, 59, 0.7);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        color: #cbd5e1;
+        padding: 7px 6px;
+        border-radius: 6px;
+        font-size: 11.5px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+      }
+      .mode-btn span.key {
+        font-size: 9.5px;
+        color: #94a3b8;
+        background: rgba(0,0,0,0.3);
+        padding: 1px 4px;
+        border-radius: 3px;
+      }
+      .mode-btn:hover {
+        background: rgba(168, 85, 247, 0.25);
+        border-color: rgba(168, 85, 247, 0.6);
+        color: #f8fafc;
+      }
+      .mode-btn.active {
+        background: linear-gradient(135deg, rgba(168, 85, 247, 0.45), rgba(236, 72, 153, 0.35));
+        border-color: #e879f9;
+        color: #fff;
+        box-shadow: 0 0 12px rgba(232, 121, 249, 0.3);
+      }
+
+      #hud .controls {
+        font-size: 12px;
+        color: #cbd5e1;
+        line-height: 1.75;
+      }
+      #hud kbd {
+        background: rgba(255, 255, 255, 0.14);
+        padding: 1px 5px;
+        border-radius: 3px;
+        color: #fdf4ff;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 11px;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+      }
+      .citation {
+        margin-top: 10px;
+        font-size: 10.5px;
+        color: #64748b;
+        border-top: 1px dashed rgba(255, 255, 255, 0.12);
+        padding-top: 7px;
+      }
+    </style>
+  </head>
+  <body>
+    <main></main>
+    <div id="hud">
+      <h1>
+        羽狀流體輪傘獸 <span class="tag">Pneumatoumbrella calcigrada</span>
+      </h1>
+      <div class="subtitle">
+        水力推進「羽狀流體輪傘」｜暗河紫色琉璃花・岩壁多足肉質步進・雙傘液壓抓握粉碎
+      </div>
+
+      <!-- 行為模式快捷切換列 -->
+      <div class="mode-switcher">
+        <button class="mode-btn active" id="btn-swim" onclick="triggerMode('swim')">
+          <strong>水力脈衝游動</strong>
+          <span class="key">按 [1]</span>
+        </button>
+        <button class="mode-btn" id="btn-creep" onclick="triggerMode('creep')">
+          <strong>岩壁肉質步進</strong>
+          <span class="key">按 [2]</span>
+        </button>
+        <button class="mode-btn" id="btn-crush" onclick="triggerMode('crush')">
+          <strong>雙傘捕食粉碎</strong>
+          <span class="key">按 [3] / [C]</span>
+        </button>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-item">
+          <span class="stat-label">水囊水壓 (Pressure)：</span>
+          <span class="stat-val" id="hud-pressure" style="color: #38bdf8;">125 kPa</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">巡航游速 (Velocity)：</span>
+          <span class="stat-val" id="hud-speed">4.3 cm/s</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">岩壁吸附力 (Adhesion)：</span>
+          <span class="stat-val" id="hud-adhesion" style="color: #34d399;">0.0 %</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">當前生態模式：</span>
+          <span class="stat-val" id="hud-active-mode" style="color: #38bdf8;">水力脈衝高速推進</span>
+        </div>
+        <div class="stat-item" style="grid-column: span 2;">
+          <span class="stat-label">視覺顯像模式：</span>
+          <span class="stat-val" id="hud-render-mode" style="color: #e879f9;">紫色琉璃半透明膜</span>
+        </div>
+      </div>
+
+      <div class="controls">
+        ▸ <strong>滑鼠左鍵拖曳</strong>：360° 旋轉視角觀察琉璃傘膜與羽狀骨架<br>
+        ▸ <strong>滑鼠滾輪</strong>：縮放鏡頭觀察邊緣微型吸盤與微孔<br>
+        ▸ <strong>點擊畫布 / 按 <kbd>B</kbd></strong>：激發突發水力超壓衝刺 (Hydraulic Overdrive)<br>
+        ▸ <strong>按 <kbd>SPACE</kbd></strong>：切換「紫色琉璃半透實體」與「幾何骨架線框」<br>
+        ▸ <strong>按 <kbd>1</kbd> / <kbd>2</kbd> / <kbd>3</kbd></strong>：即時切換水力游動／岩壁步進／捕食夾持
+      </div>
+
+      <div class="citation">
+        動力學機制：Costello et al. (2021). Multi-jet jellyfish kinematics; 吸盤蠕動：Kano et al. (2017). Peristaltic crawling biomechanics.
+      </div>
+    </div>
+
+    <script>
+      function triggerMode(m) {
+        if (typeof setMovementMode === 'function') {
+          setMovementMode(m);
+        }
+        document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+        const activeBtn = document.getElementById('btn-' + m);
+        if (activeBtn) activeBtn.classList.add('active');
+      }
+
+      // 監聽鍵盤連動按鈕 active 樣式
+      window.addEventListener('keydown', (e) => {
+        if (e.key === '1') triggerMode('swim');
+        else if (e.key === '2') triggerMode('creep');
+        else if (e.key === '3' || e.key === 'c' || e.key === 'C') triggerMode('crush');
+      });
+
+      // 支援 URL 參數快速切換模式（例：?mode=creep 或 ?mode=crush 或 ?view=wireframe）
+      window.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const m = urlParams.get('mode');
+        if (m) {
+          setTimeout(() => triggerMode(m), 250);
+        }
+        if (urlParams.get('view') === 'wireframe') {
+          setTimeout(() => {
+            viewMode = 'wireframe';
+          }, 150);
+        }
+      });
+    </script>
+    <script src="sketch.js"></script>
+  </body>
+</html>

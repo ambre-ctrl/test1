@@ -1,0 +1,293 @@
+
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>後未來動物園 M1 簡報</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+
+  @page {
+    size: 1920px 1080px;
+    margin: 0;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background-color: #0b0f17;
+    color: #e2e8f0;
+    font-family: -apple-system, BlinkMacSystemFont, "Space Grotesk", "Noto Sans TC", "PingFang TC", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .slide {
+    width: 1920px;
+    height: 1080px;
+    position: relative;
+    padding: 70px 90px;
+    background: radial-gradient(circle at 80% 20%, rgba(16, 185, 129, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 10% 80%, rgba(56, 189, 248, 0.06) 0%, transparent 40%),
+                #0b0f17;
+    overflow: hidden;
+    page-break-after: always;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* 裝飾光線與線條 */
+  .grid-bg {
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+  }
+
+  /* 頂部 Header */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 20px;
+    margin-bottom: 40px;
+    z-index: 10;
+  }
+
+  .tag-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #10b981;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .tag-badge.cyan {
+    background: rgba(56, 189, 248, 0.15);
+    border-color: rgba(56, 189, 248, 0.4);
+    color: #38bdf8;
+  }
+
+  .tag-badge.amber {
+    background: rgba(245, 158, 11, 0.15);
+    border-color: rgba(245, 158, 11, 0.4);
+    color: #f59e0b;
+  }
+
+  .tag-badge.rose {
+    background: rgba(244, 63, 94, 0.15);
+    border-color: rgba(244, 63, 94, 0.4);
+    color: #f43f5e;
+  }
+
+  .meta-info {
+    font-size: 15px;
+    color: #64748b;
+    letter-spacing: 0.5px;
+  }
+
+  .title-group {
+    margin-bottom: 35px;
+    z-index: 10;
+  }
+
+  .main-title {
+    font-size: 42px;
+    font-weight: 900;
+    color: #ffffff;
+    letter-spacing: -0.5px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .sub-title {
+    font-size: 20px;
+    color: #94a3b8;
+    font-weight: 400;
+  }
+
+  /* 內容卡片共用 */
+  .card-container {
+    display: grid;
+    gap: 25px;
+    z-index: 10;
+    flex: 1;
+  }
+
+  .card {
+    background: rgba(30, 41, 59, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
+    border-radius: 18px;
+    padding: 30px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: #10b981;
+  }
+
+  .card.cyan::before { background: #38bdf8; }
+  .card.amber::before { background: #f59e0b; }
+  .card.rose::before { background: #f43f5e; }
+
+  .card-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #f8fafc;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .card-desc {
+    font-size: 16px;
+    color: #cbd5e1;
+    line-height: 1.7;
+  }
+
+  .card-desc strong {
+    color: #ffffff;
+    font-weight: 600;
+  }
+
+  ul.bullet-list {
+    list-style: none;
+    margin-top: 12px;
+  }
+
+  ul.bullet-list li {
+    font-size: 15px;
+    color: #cbd5e1;
+    line-height: 1.8;
+    position: relative;
+    padding-left: 20px;
+    margin-bottom: 6px;
+  }
+
+  ul.bullet-list li::before {
+    content: '▸';
+    position: absolute;
+    left: 0;
+    color: #10b981;
+  }
+
+  ul.bullet-list.cyan li::before { color: #38bdf8; }
+  ul.bullet-list.amber li::before { color: #f59e0b; }
+
+  /* 底部 Footer */
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 18px;
+    margin-top: auto;
+    font-size: 14px;
+    color: #64748b;
+    z-index: 10;
+  }
+</style>
+</head>
+<body>
+
+    <div class="slide" id="slide2">
+      <div class="grid-bg"></div>
+      <div class="header">
+        <span class="tag-badge cyan">Evolutionary Timeline // 500-Year Macro View</span>
+        <span class="meta-info">階段性演化變化總表</span>
+      </div>
+
+      <div class="title-group">
+        <h2 class="main-title">廢墟生物圈宏觀演化四階段時間軸</h2>
+        <p class="sub-title">從微觀聚合物分解狂歡，到宏觀脊椎動物生物礦化大爆發的 500 年歷程</p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; z-index: 10; flex: 1;">
+        <!-- 階段一 -->
+        <div class="card rose" style="display: flex; flex-direction: column;">
+          <div style="font-size: 14px; color: #f43f5e; font-weight: 800; letter-spacing: 1px; margin-bottom: 8px;">PHASE 1</div>
+          <div style="font-size: 24px; font-weight: 800; color: #fff; margin-bottom: 6px;">0 ～ 30 年</div>
+          <div style="font-size: 17px; font-weight: 700; color: #f43f5e; margin-bottom: 14px;">塑膠狂歡與文明猝死</div>
+          <p class="card-desc" style="font-size: 14px; margin-bottom: 12px;">水解菌（PETase突變株）大爆發，現代基礎設施全面熔斷。</p>
+          <ul class="bullet-list" style="margin-top: auto; font-size: 13px;">
+            <li>電纜絕緣溶解造成全球斷電</li>
+            <li>PVC自來水管破裂引發洪災</li>
+            <li>醫療無菌耗材歸零，人類在30年內滅亡95%</li>
+          </ul>
+        </div>
+
+        <!-- 階段二 -->
+        <div class="card amber" style="display: flex; flex-direction: column;">
+          <div style="font-size: 14px; color: #f59e0b; font-weight: 800; letter-spacing: 1px; margin-bottom: 8px;">PHASE 2</div>
+          <div style="font-size: 24px; font-weight: 800; color: #fff; margin-bottom: 6px;">30 ～ 100 年</div>
+          <div style="font-size: 17px; font-weight: 700; color: #f59e0b; margin-bottom: 14px;">樹脂反噬與全球火海</div>
+          <p class="card-desc" style="font-size: 14px; margin-bottom: 12px;">塑膠枯竭逼使細菌突變，轉向吞噬天然樹脂與植物角質。</p>
+          <ul class="bullet-list amber" style="margin-top: auto; font-size: 13px;">
+            <li>樹木流血不止、害蟲侵入</li>
+            <li>全球森林枯死引發超級野火</li>
+            <li>大滅絕完成，生態位徹底真空</li>
+          </ul>
+        </div>
+
+        <!-- 階段三 -->
+        <div class="card cyan" style="display: flex; flex-direction: column;">
+          <div style="font-size: 14px; color: #38bdf8; font-weight: 800; letter-spacing: 1px; margin-bottom: 8px;">PHASE 3</div>
+          <div style="font-size: 24px; font-weight: 800; color: #fff; margin-bottom: 6px;">100 ～ 300 年</div>
+          <div style="font-size: 17px; font-weight: 700; color: #38bdf8; margin-bottom: 14px;">微型先鋒與礦化萌芽</div>
+          <p class="card-desc" style="font-size: 14px; margin-bottom: 12px;">「有機外皮會被吃掉，就改用石頭做盔甲」的天擇法則確立。</p>
+          <ul class="bullet-list cyan" style="margin-top: auto; font-size: 13px;">
+            <li>短世代節肢動物經歷300~900代</li>
+            <li>甲殼富集二氧化矽與碳酸鈣</li>
+            <li>耐鹼地衣在水泥瓦礫上形成菌膜</li>
+          </ul>
+        </div>
+
+        <!-- 階段四 -->
+        <div class="card" style="display: flex; flex-direction: column; border-color: rgba(16, 185, 129, 0.5); background: rgba(16, 185, 129, 0.08);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-size: 14px; color: #10b981; font-weight: 800; letter-spacing: 1px;">PHASE 4</span>
+            <span style="font-size: 11px; background: #10b981; color: #000; font-weight: 900; padding: 2px 6px; border-radius: 4px;">本專案設定點</span>
+          </div>
+          <div style="font-size: 24px; font-weight: 800; color: #fff; margin-bottom: 6px;">300 ～ 500 年 (400y)</div>
+          <div style="font-size: 17px; font-weight: 700; color: #10b981; margin-bottom: 14px;">奇異物種大爆發</div>
+          <p class="card-desc" style="font-size: 14px; margin-bottom: 12px;">脊椎動物解剖重構，礦物盔甲與代謝共生達成全新平衡。</p>
+          <ul class="bullet-list" style="margin-top: auto; font-size: 13px;">
+            <li>100% 無塑膠、枯木石化的無機廢墟</li>
+            <li>鳥類與爬蟲演化出生物陶瓷裝甲</li>
+            <li>在裸露鋼筋迷宮中依賴微弱電場導航</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer">
+        <span>後未來動物園 M1 世界觀研究</span>
+        <span>Slide 2 / 8</span>
+      </div>
+    </div>
+    
+</body>
+</html>

@@ -1,0 +1,836 @@
+import os
+import subprocess
+
+OUTPUT_DIR = "/Users/cheng-kuanglee/post-future-zoo/m1-world"
+IMAGES_DIR = os.path.join(OUTPUT_DIR, "slides_images")
+CHROME_PATH = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+
+os.makedirs(IMAGES_DIR, exist_ok=True)
+
+COMMON_HEAD = """
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>後未來動物園 M1 簡報</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+
+  @page {
+    size: 1920px 1080px;
+    margin: 0;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background-color: #0b0f17;
+    color: #e2e8f0;
+    font-family: -apple-system, BlinkMacSystemFont, "Space Grotesk", "Noto Sans TC", "PingFang TC", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .slide {
+    width: 1920px;
+    height: 1080px;
+    position: relative;
+    padding: 70px 90px;
+    background: radial-gradient(circle at 80% 20%, rgba(16, 185, 129, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 10% 80%, rgba(56, 189, 248, 0.06) 0%, transparent 40%),
+                #0b0f17;
+    overflow: hidden;
+    page-break-after: always;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* 裝飾光線與線條 */
+  .grid-bg {
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+  }
+
+  /* 頂部 Header */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 20px;
+    margin-bottom: 40px;
+    z-index: 10;
+  }
+
+  .tag-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #10b981;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .tag-badge.cyan {
+    background: rgba(56, 189, 248, 0.15);
+    border-color: rgba(56, 189, 248, 0.4);
+    color: #38bdf8;
+  }
+
+  .tag-badge.amber {
+    background: rgba(245, 158, 11, 0.15);
+    border-color: rgba(245, 158, 11, 0.4);
+    color: #f59e0b;
+  }
+
+  .tag-badge.rose {
+    background: rgba(244, 63, 94, 0.15);
+    border-color: rgba(244, 63, 94, 0.4);
+    color: #f43f5e;
+  }
+
+  .meta-info {
+    font-size: 15px;
+    color: #64748b;
+    letter-spacing: 0.5px;
+  }
+
+  .title-group {
+    margin-bottom: 35px;
+    z-index: 10;
+  }
+
+  .main-title {
+    font-size: 42px;
+    font-weight: 900;
+    color: #ffffff;
+    letter-spacing: -0.5px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .sub-title {
+    font-size: 20px;
+    color: #94a3b8;
+    font-weight: 400;
+  }
+
+  /* 內容卡片共用 */
+  .card-container {
+    display: grid;
+    gap: 25px;
+    z-index: 10;
+    flex: 1;
+  }
+
+  .card {
+    background: rgba(30, 41, 59, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
+    border-radius: 18px;
+    padding: 30px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: #10b981;
+  }
+
+  .card.cyan::before { background: #38bdf8; }
+  .card.amber::before { background: #f59e0b; }
+  .card.rose::before { background: #f43f5e; }
+
+  .card-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #f8fafc;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .card-desc {
+    font-size: 16px;
+    color: #cbd5e1;
+    line-height: 1.7;
+  }
+
+  .card-desc strong {
+    color: #ffffff;
+    font-weight: 600;
+  }
+
+  ul.bullet-list {
+    list-style: none;
+    margin-top: 12px;
+  }
+
+  ul.bullet-list li {
+    font-size: 15px;
+    color: #cbd5e1;
+    line-height: 1.8;
+    position: relative;
+    padding-left: 20px;
+    margin-bottom: 6px;
+  }
+
+  ul.bullet-list li::before {
+    content: '▸';
+    position: absolute;
+    left: 0;
+    color: #10b981;
+  }
+
+  ul.bullet-list.cyan li::before { color: #38bdf8; }
+  ul.bullet-list.amber li::before { color: #f59e0b; }
+
+  /* 底部 Footer */
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 18px;
+    margin-top: auto;
+    font-size: 14px;
+    color: #64748b;
+    z-index: 10;
+  }
+</style>
+</head>
+<body>
+"""
+
+COMMON_FOOT = """
+</body>
+</html>
+"""
+
+# 8 張簡報的個別內容
+SLIDES_HTML = [
+    # Slide 1: 封面
+    """
+    <div class="slide" id="slide1">
+      <div class="grid-bg"></div>
+      <div class="header">
+        <span class="tag-badge">Post-Future Zoo // Speculative Biology Lab</span>
+        <span class="meta-info">江振維老師課程｜物件導向程式設計・期末專案</span>
+      </div>
+
+      <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; z-index: 10; padding: 20px 0;">
+        <div style="font-size: 18px; letter-spacing: 3px; color: #10b981; font-weight: 700; text-transform: uppercase; margin-bottom: 12px;">
+          MILESTONE 1 : WORLDBUILDING RESEARCH
+        </div>
+        <h1 style="font-size: 64px; font-weight: 900; line-height: 1.15; margin-bottom: 24px; color: #ffffff; letter-spacing: -1px;">
+          後未來動物園：<br><span style="background: linear-gradient(90deg, #10b981, #38bdf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">聚合物吞噬浩劫與 400 年後的礦化新生命圈</span>
+        </h1>
+        
+        <!-- 一句話定案核心框 -->
+        <div style="background: rgba(15, 23, 42, 0.8); border: 2px solid rgba(16, 185, 129, 0.4); border-radius: 20px; padding: 35px 45px; margin: 30px 0; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5); backdrop-filter: blur(20px);">
+          <div style="font-size: 15px; color: #94a3b8; font-weight: 700; letter-spacing: 1px; margin-bottom: 10px; text-transform: uppercase;">
+            ★ 世界觀核心定案句 (World Anchor Statement)
+          </div>
+          <div style="font-size: 28px; line-height: 1.6; color: #f8fafc; font-weight: 500;">
+            「我的世界是人類消失後 <span style="color: #38bdf8; font-weight: 700;">400 年後</span> 的世界，這裡最大的生存挑戰是：<br>
+            <strong style="color: #10b981; font-weight: 800; background: rgba(16, 185, 129, 0.1); padding: 2px 10px; border-radius: 8px;">在塑膠與植物樹脂被細菌徹底分解的裸露廢墟中，抵禦無處不在的水解侵蝕，並建立生物礦化外殼與代謝共生。</strong>」
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 40px; margin-top: 15px; font-size: 17px; color: #94a3b8;">
+          <div><strong>研究員 / 創作者：</strong> 李蕙希 (ambre-ctrl)</div>
+          <div><strong>時間錨點：</strong> 人類消失後 400 年</div>
+          <div><strong>核心生態系：</strong> 礦化外殼節肢生物 / 鐵鏽導航群 / 水解菌共生體</div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <span>科技藝術大一・物件導向程式設計期末專案</span>
+        <span>10/1 M1 世界觀研究報告站</span>
+      </div>
+    </div>
+    """,
+
+    # Slide 2: 時間軸總覽
+    """
+    <div class="slide" id="slide2">
+      <div class="grid-bg"></div>
+      <div class="header">
+        <span class="tag-badge cyan">Evolutionary Timeline // 500-Year Macro View</span>
+        <span class="meta-info">階段性演化變化總表</span>
+      </div>
+
+      <div class="title-group">
+        <h2 class="main-title">廢墟生物圈宏觀演化四階段時間軸</h2>
+        <p class="sub-title">從微觀聚合物分解狂歡，到宏觀脊椎動物生物礦化大爆發的 500 年歷程</p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; z-index: 10; flex: 1;">
+        <!-- 階段一 -->
+        <div class="card rose" style="display: flex; flex-direction: column;">
+          <div style="font-size: 14px; color: #f43f5e; font-weight: 800; letter-spacing: 1px; margin-bottom: 8px;">PHASE 1</div>
+          <div style="font-size: 24px; font-weight: 800; color: #fff; margin-bottom: 6px;">0 ～ 30 年</div>
+          <div style="font-size: 17px; font-weight: 700; color: #f43f5e; margin-bottom: 14px;">塑膠狂歡與文明猝死</div>
+          <p class="card-desc" style="font-size: 14px; margin-bottom: 12px;">水解菌（PETase突變株）大爆發，現代基礎設施全面熔斷。</p>
+          <ul class="bullet-list" style="margin-top: auto; font-size: 13px;">
+            <li>電纜絕緣溶解造成全球斷電</li>
+            <li>PVC自來水管破裂引發洪災</li>
+            <li>醫療無菌耗材歸零，人類在30年內滅亡95%</li>
+          </ul>
+        </div>
+
+        <!-- 階段二 -->
+        <div class="card amber" style="display: flex; flex-direction: column;">
+          <div style="font-size: 14px; color: #f59e0b; font-weight: 800; letter-spacing: 1px; margin-bottom: 8px;">PHASE 2</div>
+          <div style="font-size: 24px; font-weight: 800; color: #fff; margin-bottom: 6px;">30 ～ 100 年</div>
+          <div style="font-size: 17px; font-weight: 700; color: #f59e0b; margin-bottom: 14px;">樹脂反噬與全球火海</div>
+          <p class="card-desc" style="font-size: 14px; margin-bottom: 12px;">塑膠枯竭逼使細菌突變，轉向吞噬天然樹脂與植物角質。</p>
+          <ul class="bullet-list amber" style="margin-top: auto; font-size: 13px;">
+            <li>樹木流血不止、害蟲侵入</li>
+            <li>全球森林枯死引發超級野火</li>
+            <li>大滅絕完成，生態位徹底真空</li>
+          </ul>
+        </div>
+
+        <!-- 階段三 -->
+        <div class="card cyan" style="display: flex; flex-direction: column;">
+          <div style="font-size: 14px; color: #38bdf8; font-weight: 800; letter-spacing: 1px; margin-bottom: 8px;">PHASE 3</div>
+          <div style="font-size: 24px; font-weight: 800; color: #fff; margin-bottom: 6px;">100 ～ 300 年</div>
+          <div style="font-size: 17px; font-weight: 700; color: #38bdf8; margin-bottom: 14px;">微型先鋒與礦化萌芽</div>
+          <p class="card-desc" style="font-size: 14px; margin-bottom: 12px;">「有機外皮會被吃掉，就改用石頭做盔甲」的天擇法則確立。</p>
+          <ul class="bullet-list cyan" style="margin-top: auto; font-size: 13px;">
+            <li>短世代節肢動物經歷300~900代</li>
+            <li>甲殼富集二氧化矽與碳酸鈣</li>
+            <li>耐鹼地衣在水泥瓦礫上形成菌膜</li>
+          </ul>
+        </div>
+
+        <!-- 階段四 -->
+        <div class="card" style="display: flex; flex-direction: column; border-color: rgba(16, 185, 129, 0.5); background: rgba(16, 185, 129, 0.08);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-size: 14px; color: #10b981; font-weight: 800; letter-spacing: 1px;">PHASE 4</span>
+            <span style="font-size: 11px; background: #10b981; color: #000; font-weight: 900; padding: 2px 6px; border-radius: 4px;">本專案設定點</span>
+          </div>
+          <div style="font-size: 24px; font-weight: 800; color: #fff; margin-bottom: 6px;">300 ～ 500 年 (400y)</div>
+          <div style="font-size: 17px; font-weight: 700; color: #10b981; margin-bottom: 14px;">奇異物種大爆發</div>
+          <p class="card-desc" style="font-size: 14px; margin-bottom: 12px;">脊椎動物解剖重構，礦物盔甲與代謝共生達成全新平衡。</p>
+          <ul class="bullet-list" style="margin-top: auto; font-size: 13px;">
+            <li>100% 無塑膠、枯木石化的無機廢墟</li>
+            <li>鳥類與爬蟲演化出生物陶瓷裝甲</li>
+            <li>在裸露鋼筋迷宮中依賴微弱電場導航</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer">
+        <span>後未來動物園 M1 世界觀研究</span>
+        <span>Slide 2 / 8</span>
+      </div>
+    </div>
+    """,
+
+    # Slide 3: 階段一細節
+    """
+    <div class="slide" id="slide3">
+      <div class="grid-bg"></div>
+      <div class="header">
+        <span class="tag-badge rose">Phase 1 Deep Dive // 0 - 30 Years</span>
+        <span class="meta-info">塑膠狂歡與文明猝死</span>
+      </div>
+
+      <div class="title-group">
+        <h2 class="main-title">階段一：塑膠狂歡與現代文明的結構性猝死</h2>
+        <p class="sub-title">大阪堺菌突變株爆發：人類並非死於外星武器，而是死於隱形高分子網絡的熔斷</p>
+      </div>
+
+      <div class="card-container" style="grid-template-columns: repeat(3, 1fr);">
+        <div class="card rose">
+          <div class="card-title">
+            <span style="font-size: 28px;">🧫</span>
+            <span>微觀代謝爆發</span>
+          </div>
+          <p class="card-desc">
+            人類每年製造超過 <strong>4.6 億噸</strong> 塑膠，掩埋場與水系形成前所未有的「超級碳源庫」。
+          </p>
+          <ul class="bullet-list">
+            <li>大阪堺菌（<em>Ideonella sakaiensis</em>）衍生株在垃圾帶急速變異。</li>
+            <li>高活性 <strong>PETase</strong> 酵素在常溫下以百倍速率水解長鏈聚酯。</li>
+            <li>將原本不可降解的高分子快速分解為單體 <strong>MHET、TPA 與乙二醇</strong>。</li>
+          </ul>
+        </div>
+
+        <div class="card rose">
+          <div class="card-title">
+            <span style="font-size: 28px;">⚡</span>
+            <span>基礎設施連鎖溶解</span>
+          </div>
+          <p class="card-desc">
+            人類城市高度依賴聚合物，其溶解直接摧毀現代維生工程：
+          </p>
+          <ul class="bullet-list">
+            <li><strong>電網癱瘓</strong>：交聯聚乙烯（XLPE）與 PVC 電纜絕緣皮在數週內化為黏泥，引發全球大短路與城市大火。</li>
+            <li><strong>自來水噴發</strong>：PVC、HDPE 管壁穿孔破裂，高壓水流沖毀建築內部，引發室內瀑布。</li>
+            <li><strong>醫療歸零</strong>：無菌注射針筒、點滴管、透析膜在 30 天內脆化污染，抗生素與急救徹底失效。</li>
+          </ul>
+        </div>
+
+        <div class="card rose">
+          <div class="card-title">
+            <span style="font-size: 28px;">🏚️</span>
+            <span>景觀演變與人口滅絕</span>
+          </div>
+          <p class="card-desc">
+            缺乏電力、乾淨飲用水與無菌防護，人類社會在 30 年內迅速瓦解：
+          </p>
+          <ul class="bullet-list">
+            <li>全球人口在 30 年內驟降 <strong>95% 以上</strong>，工業生產體系徹底停擺。</li>
+            <li>地表所有化纖衣服、保特瓶、包裝膜全部水解沉澱為一層黑色發酵有機泥。</li>
+            <li>人類遺棄的城市建築失去氣密與防水密封，雨水直接長驅直入混凝土毛細孔。</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer">
+        <span>後未來動物園 M1 世界觀研究</span>
+        <span>Slide 3 / 8</span>
+      </div>
+    </div>
+    """,
+
+    # Slide 4: 階段二細節
+    """
+    <div class="slide" id="slide4">
+      <div class="grid-bg"></div>
+      <div class="header">
+        <span class="tag-badge amber">Phase 2 Deep Dive // 30 - 100 Years</span>
+        <span class="meta-info">樹脂反噬與全球火海</span>
+      </div>
+
+      <div class="title-group">
+        <h2 class="main-title">階段二：飢餓天擇、樹脂反噬與全球森林覆滅</h2>
+        <p class="sub-title">當人造聚合物被吃光，龐大的微生物族群跨界吞噬樹木的「血液與免疫抗生素」</p>
+      </div>
+
+      <div class="card-container" style="grid-template-columns: repeat(3, 1fr);">
+        <div class="card amber">
+          <div class="card-title">
+            <span style="font-size: 28px;">🧬</span>
+            <span>酵素演化跨界反噬</span>
+          </div>
+          <p class="card-desc">
+            城市塑膠耗盡後，數以億兆計的細菌面臨毀滅性飢餓天擇。
+          </p>
+          <ul class="bullet-list amber">
+            <li>PETase 與植物病原菌的 <strong>角質酶（Cutinase）</strong> 在基因上高度同源。</li>
+            <li>僅需數個位點突變，酵素活性中心即演化出水解天然萜烯、樹脂酸與葉面蠟質的能力。</li>
+            <li>細菌跨界向自然森林擴散，將植物天然防護層視為下一批龐大碳源。</li>
+          </ul>
+        </div>
+
+        <div class="card amber">
+          <div class="card-title">
+            <span style="font-size: 28px;">🌲</span>
+            <span>樹木免疫系統徹底崩壞</span>
+          </div>
+          <p class="card-desc">
+            樹脂（Resin）是植物生存的絕對基石，其喪失引發骨牌枯萎：
+          </p>
+          <ul class="bullet-list amber">
+            <li><strong>流血不止</strong>：樹木受傷後高壓樹脂無法凝結成痂，樹液持續蒸發流失。</li>
+            <li><strong>失去抗生素</strong>：單萜與樹脂酸被分解，木腐菌與藍變真菌長驅直入心材。</li>
+            <li><strong>害蟲肆虐</strong>：小蠹蟲不再被樹脂窒息封印，數月內將整座森林蛀成空心。針葉林與落葉林大面積暴斃。</li>
+          </ul>
+        </div>
+
+        <div class="card amber">
+          <div class="card-title">
+            <span style="font-size: 28px;">🔥</span>
+            <span>全球超級野火與大滅絕</span>
+          </div>
+          <p class="card-desc">
+            數億噸乾燥枯木化為地表最大的引火物，引發全球性浩劫：
+          </p>
+          <ul class="bullet-list amber">
+            <li>雷擊引發遮天蔽日的全球連鎖野火（Firestorms）。</li>
+            <li>煙塵遮蔽陽光引發短暫「核冬效應」，大氣氧氣波動，二氧化碳爆表。</li>
+            <li>人類殘存的少數原始聚落與絕大多數中大型陸生哺乳動物於此階段<strong>徹底滅絕</strong>。</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer">
+        <span>後未來動物園 M1 世界觀研究</span>
+        <span>Slide 4 / 8</span>
+      </div>
+    </div>
+    """,
+
+    # Slide 5: 階段三細節
+    """
+    <div class="slide" id="slide5">
+      <div class="grid-bg"></div>
+      <div class="header">
+        <span class="tag-badge cyan">Phase 3 Deep Dive // 100 - 300 Years</span>
+        <span class="meta-info">微型先鋒與礦化萌芽</span>
+      </div>
+
+      <div class="title-group">
+        <h2 class="main-title">階段三：微型先鋒的突圍——「生物礦化」防禦革命</h2>
+        <p class="sub-title">殘酷天擇鐵律：任何依賴純有機聚合物做外皮的生命，皆被環境水解菌分解吞噬</p>
+      </div>
+
+      <div class="card-container" style="grid-template-columns: repeat(3, 1fr);">
+        <div class="card cyan">
+          <div class="card-title">
+            <span style="font-size: 28px;">⚙️</span>
+            <span>天擇法則轉向無機物</span>
+          </div>
+          <p class="card-desc">
+            大火過後的焦土世界充滿了水解菌孢子。
+          </p>
+          <ul class="bullet-list cyan">
+            <li>傳統的有機角質、蠟質、純幾丁質（甲殼素）外皮在環境中極易被酵素附著溶解。</li>
+            <li>存活下來的少數生物發現了一條唯一的生路：<strong>放棄純有機外層，改向無機礦物尋求物理防禦</strong>。</li>
+            <li>水泥瓦礫與風化岩石中富含的矽、鈣、鐵，成為新演化的原料庫。</li>
+          </ul>
+        </div>
+
+        <div class="card cyan">
+          <div class="card-title">
+            <span style="font-size: 28px;">🪲</span>
+            <span>短世代節肢動物率先突變</span>
+          </div>
+          <p class="card-desc">
+            生命週期短、繁殖繁密的生物率先突圍：
+          </p>
+          <ul class="bullet-list cyan">
+            <li>昆蟲與節肢動物在 200 年間經歷了 <strong>300 ～ 900 個世代</strong> 的高頻天擇。</li>
+            <li>表皮細胞演化出吸收周遭 <strong>二氧化矽（玻璃質）</strong> 與 <strong>碳酸鈣（石灰質）</strong> 的生物礦化機制（Biomineralization）。</li>
+            <li>演化出像陶瓷、琺瑯質般堅硬光滑的外殼，水解菌酵素完全無法附著與分解。</li>
+          </ul>
+        </div>
+
+        <div class="card cyan">
+          <div class="card-title">
+            <span style="font-size: 28px;">🕳️</span>
+            <span>生態位大清洗與基底重組</span>
+          </div>
+          <p class="card-desc">
+            舊世界複雜的草食-肉食食物網徹底被鏟平：
+          </p>
+          <ul class="bullet-list cyan">
+            <li>地表原初生產者轉變為：水泥縫隙中的耐鹼藍綠菌生物膜、耐旱地衣與石化菌落。</li>
+            <li>初級消費者為陶瓷化甲殼碎屑昆蟲；食物鏈短而強韌。</li>
+            <li>留下了前所未有的「生態位大真空」，為脊椎動物在下一階段的解剖大改造拉開序幕。</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer">
+        <span>後未來動物園 M1 世界觀研究</span>
+        <span>Slide 5 / 8</span>
+      </div>
+    </div>
+    """,
+
+    # Slide 6: 階段四（300-500年）核心展開
+    """
+    <div class="slide" id="slide6">
+      <div class="grid-bg"></div>
+      <div class="header">
+        <span class="tag-badge">Phase 4 Core Focus // 300 - 500 Years (Anchor: 400Y)</span>
+        <span class="meta-info">後未來動物園主角誕生時刻</span>
+      </div>
+
+      <div class="title-group">
+        <h2 class="main-title">階段四：400 年後的廢墟地景與奇異物種大爆發</h2>
+        <p class="sub-title">100% 無塑廢墟、白石與鋼筋迷宮中，脊椎動物經過數百代重組形成的全新生命圈</p>
+      </div>
+
+      <!-- 地景特徵 4 小卡 -->
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; z-index: 10;">
+        <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 15px 20px;">
+          <div style="color: #10b981; font-weight: 700; font-size: 15px; margin-bottom: 4px;">01. 絕對無塑世界</div>
+          <div style="color: #94a3b8; font-size: 13px; line-height: 1.5;">地表 0% 塑膠殘留，保特瓶與化纖全無，回歸極致純粹的無機物世界。</div>
+        </div>
+        <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 15px 20px;">
+          <div style="color: #38bdf8; font-weight: 700; font-size: 15px; margin-bottom: 4px;">02. 鐵鏽懸崖骨架</div>
+          <div style="color: #94a3b8; font-size: 13px; line-height: 1.5;">混凝土表皮剝落，裸露的高強度鋼筋網生鏽形成立體「人造鐵樹林」。</div>
+        </div>
+        <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 15px 20px;">
+          <div style="color: #f59e0b; font-weight: 700; font-size: 15px; margin-bottom: 4px;">03. 碳酸鈣鐘乳石柱</div>
+          <div style="color: #94a3b8; font-size: 13px; line-height: 1.5;">數百年雨水淋溶脫鈣，大樓裂縫與地下室沉積生長出白色石灰岩林。</div>
+        </div>
+        <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 15px 20px;">
+          <div style="color: #a855f7; font-weight: 700; font-size: 15px; margin-bottom: 4px;">04. 石化碳質枯木</div>
+          <div style="color: #94a3b8; font-size: 13px; line-height: 1.5;">遠古大火焦木經過 400 年矽化與碳化，堅如鋼鐵，成為永久景觀。</div>
+        </div>
+      </div>
+
+      <!-- 三大演化特化機制卡片 -->
+      <div class="card-container" style="grid-template-columns: repeat(3, 1fr); z-index: 10;">
+        <div class="card" style="border-color: rgba(16, 185, 129, 0.4);">
+          <div class="card-title">
+            <span style="font-size: 26px;">🛡️</span>
+            <span>生物陶瓷複合裝甲</span>
+          </div>
+          <p class="card-desc">
+            脊椎動物（鳥類、爬蟲、小型哺乳類）經 200~400 代演化：
+          </p>
+          <ul class="bullet-list">
+            <li>鳥喙、爪刃與外鱗片不再含單純角蛋白，而是大量沉積 <strong>矽質與碳酸鈣多層晶體</strong>。</li>
+            <li>宛如活體陶瓷，抗刮、防酸、且徹底免疫水解菌酵素。</li>
+            <li>陽光穿透廢墟骨架時，生物體表折射出奇異的無機釉彩光澤。</li>
+          </ul>
+        </div>
+
+        <div class="card cyan">
+          <div class="card-title">
+            <span style="font-size: 26px;">🦠</span>
+            <span>逆向水解菌代謝共生</span>
+          </div>
+          <p class="card-desc">
+            「打不倒它，就將它馴化成體內器官」：
+          </p>
+          <ul class="bullet-list cyan">
+            <li>特化生物在盲腸或毒囊中演化出強酸「隔離腔」，收容古老水解菌。</li>
+            <li>利用細菌分泌的酵素消化堅硬的石化木纖維與極端化合物。</li>
+            <li>受攻擊時可高壓噴射出具備強烈有機溶解力的腐蝕黏液自衛。</li>
+          </ul>
+        </div>
+
+        <div class="card amber">
+          <div class="card-title">
+            <span style="font-size: 26px;">⚡</span>
+            <span>金屬電磁微感應系統</span>
+          </div>
+          <p class="card-desc">
+            適應金屬廢墟迷宮的全新神經感知：
+          </p>
+          <ul class="bullet-list amber">
+            <li>在光線複雜、無樹蔭的鋼筋迷宮中，生物視力部分退化。</li>
+            <li>吻部與長鬚特化出「電感微孔」（類似鯊魚羅倫氏腹室）。</li>
+            <li>感應裸露鋼筋電化學腐蝕產生的微弱電位差，在黑暗中閉眼導航與獵食。</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer">
+        <span>後未來動物園 M1 世界觀研究</span>
+        <span>Slide 6 / 8</span>
+      </div>
+    </div>
+    """,
+
+    # Slide 7: 證據一
+    """
+    <div class="slide" id="slide7">
+      <div class="grid-bg"></div>
+      <div class="header">
+        <span class="tag-badge">Scientific Evidence // Microbiology & Evolution</span>
+        <span class="meta-info">權威科學證據 (一)</span>
+      </div>
+
+      <div class="title-group">
+        <h2 class="main-title">科學證據（一）：微生物代謝真相與跨界演化同源性</h2>
+        <p class="sub-title">嚴格支撐世界觀的兩大頂級期刊文獻（Science / PNAS）</p>
+      </div>
+
+      <div class="card-container" style="grid-template-columns: 1fr 1fr;">
+        <!-- 文獻 1 -->
+        <div class="card">
+          <div style="font-size: 13px; color: #10b981; font-weight: 800; letter-spacing: 1px; margin-bottom: 6px;">EVIDENCE 01 // SCIENCE (2016)</div>
+          <div style="font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 8px;">
+            大阪堺菌（<em>Ideonella sakaiensis</em>）分解機制與代謝產物
+          </div>
+          <div style="font-size: 14px; color: #64748b; margin-bottom: 15px;">
+            Yoshida et al. <em>Science</em>, 351(6278), 1196–1199.
+          </div>
+          <p class="card-desc" style="font-size: 15px;">
+            <strong>【代謝途徑】</strong> 細菌分泌 PETase 結合塑膠表面水解為 MHET，MHETase 進一步分解為對苯二甲酸（TPA）與乙二醇（EG）。
+          </p>
+          <ul class="bullet-list" style="margin-top: 15px; font-size: 14px;">
+            <li><strong>細菌消耗什麼？</strong> 消耗塑膠本身、反應必需的<strong>水分子（H₂O）</strong>與好氧呼吸的<strong>氧氣（O₂）</strong>。</li>
+            <li><strong>細菌取得什麼？</strong> 轉化為原兒茶酸進入 TCA 循環，取得構建細胞膜/蛋白質的<strong>碳骨架</strong>與生存能量 <strong>ATP</strong>。</li>
+            <li><strong>分解後產生什麼？</strong> 最終釋放 <strong>CO₂、H₂O</strong> 與大量富含有機質的<strong>菌泥生物膜（Biomass）</strong>。</li>
+          </ul>
+        </div>
+
+        <!-- 文獻 2 -->
+        <div class="card cyan">
+          <div style="font-size: 13px; color: #38bdf8; font-weight: 800; letter-spacing: 1px; margin-bottom: 6px;">EVIDENCE 02 // PNAS (2018)</div>
+          <div style="font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 8px;">
+            演化橋樑：從植物角質酶（Cutinase）到塑膠水解酶
+          </div>
+          <div style="font-size: 14px; color: #64748b; margin-bottom: 15px;">
+            Austin et al. <em>PNAS</em>, 115(19), E4350–E4357.
+          </div>
+          <p class="card-desc" style="font-size: 15px;">
+            <strong>【同源晶體結構】</strong> 晶體解析證實，PETase 結構骨幹與分解天然植物蠟質的<strong>角質酶（Cutinase）</strong>高度同源。
+          </p>
+          <ul class="bullet-list cyan" style="margin-top: 15px; font-size: 14px;">
+            <li><strong>跨界演化可行性</strong>：天然植物表皮聚酯與合成塑膠化學鍵高度相似，兩者僅差數個胺基酸位點。</li>
+            <li><strong>逆噬邏輯依據</strong>：當環境塑膠被消耗殆盡，極度飢餓的菌群在強烈天擇下，只需微小突變即可重新反噬植物角質與天然樹脂。</li>
+            <li><strong>世界觀基石</strong>：為「塑膠吃光後植物樹脂遭殃」提供了堅不可摧的分子演化依據。</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer">
+        <span>後未來動物園 M1 世界觀研究</span>
+        <span>Slide 7 / 8</span>
+      </div>
+    </div>
+    """,
+
+    # Slide 8: 證據二
+    """
+    <div class="slide" id="slide8">
+      <div class="grid-bg"></div>
+      <div class="header">
+        <span class="tag-badge amber">Scientific Evidence // Pathology & Infrastructure</span>
+        <span class="meta-info">權威科學證據 (二)</span>
+      </div>
+
+      <div class="title-group">
+        <h2 class="main-title">科學證據（二）：樹木免疫崩潰與人類依賴真相</h2>
+        <p class="sub-title">植物病理學與全球基礎設施數據：解釋人類 100 年滅絕與森林覆滅的物理必然性</p>
+      </div>
+
+      <div class="card-container" style="grid-template-columns: repeat(3, 1fr);">
+        <!-- 文獻 3 -->
+        <div class="card amber">
+          <div style="font-size: 12px; color: #f59e0b; font-weight: 800; letter-spacing: 1px; margin-bottom: 4px;">EVIDENCE 03 // NEW PHYTOLOGIST (2005)</div>
+          <div style="font-size: 19px; font-weight: 800; color: #fff; margin-bottom: 6px;">
+            樹脂道防禦與森林暴斃機制
+          </div>
+          <div style="font-size: 13px; color: #64748b; margin-bottom: 12px;">Franceschi et al. 167(2), 353–376.</div>
+          <p class="card-desc" style="font-size: 14px;">
+            樹脂道（Resin Ducts）是針葉樹無可取代的三大防衛機制：
+          </p>
+          <ul class="bullet-list amber" style="font-size: 13px;">
+            <li><strong>流體封傷（凝血）</strong>：受傷立刻高壓噴出封閉傷口，阻止樹液乾涸。</li>
+            <li><strong>化學殺菌</strong>：高濃度單萜與樹脂酸毒殺木腐菌。</li>
+            <li><strong>窒息甲蟲</strong>：淹沒鑽入的小蠹蟲。<strong>缺乏樹脂流時，藍變真菌在數週內阻斷輸水系統致樹木暴斃</strong>。</li>
+          </ul>
+        </div>
+
+        <!-- 文獻 4 -->
+        <div class="card">
+          <div style="font-size: 12px; color: #10b981; font-weight: 800; letter-spacing: 1px; margin-bottom: 4px;">EVIDENCE 04 // SCIENCE ADVANCES (2017)</div>
+          <div style="font-size: 19px; font-weight: 800; color: #fff; margin-bottom: 6px;">
+            全球 83 億噸塑膠分佈數據
+          </div>
+          <div style="font-size: 13px; color: #64748b; margin-bottom: 12px;">Geyer et al. 3(7), e1700782.</div>
+          <p class="card-desc" style="font-size: 14px;">
+            人類已累計生產 83 億噸塑膠，現代社會深陷聚合物依賴：
+          </p>
+          <ul class="bullet-list" style="font-size: 13px;">
+            <li><strong>包裝物流業佔 36%~40%</strong>：主導全球食品流通與農業冷鏈。</li>
+            <li><strong>建築基礎設施佔 16%~19%</strong>：給排水與電氣絕緣的隱形骨架。</li>
+            <li><strong>文明脆弱性</strong>：人類不是生活在堅硬水泥世界，而是包裹在聚合物薄膜的溫室中。</li>
+          </ul>
+        </div>
+
+        <!-- 文獻 5 -->
+        <div class="card cyan">
+          <div style="font-size: 12px; color: #38bdf8; font-weight: 800; letter-spacing: 1px; margin-bottom: 4px;">EVIDENCE 05 // PHIL. TRANS. R. SOC. B (2009)</div>
+          <div style="font-size: 19px; font-weight: 800; color: #fff; margin-bottom: 6px;">
+            建築隱形塑膠崩潰必然性
+          </div>
+          <div style="font-size: 13px; color: #64748b; margin-bottom: 12px;">Andrady & Neal, 364(1526), 1977–1984.</div>
+          <p class="card-desc" style="font-size: 14px;">
+            建築中無法被金屬或水泥取代的聚合物：
+          </p>
+          <ul class="bullet-list cyan" style="font-size: 13px;">
+            <li><strong>XLPE / PVC 電纜絕緣</strong>：水解後直接導致全城電網永久斷電與大火災。</li>
+            <li><strong>PVC / HDPE 水管</strong>：破裂引發室內水災與地基掏空。</li>
+            <li><strong>氣密防水層（PU/EPDM）</strong>：瓦解後加速鋼筋鏽蝕與混凝土脫鈣剝落。</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer">
+        <span>後未來動物園 M1 世界觀研究</span>
+        <span>Slide 8 / 8</span>
+      </div>
+    </div>
+    """
+]
+
+# 1. 寫入單一組合 HTML 檔案（用於列印完整 PDF）
+combined_html_path = os.path.join(OUTPUT_DIR, "m1-slides.html")
+with open(combined_html_path, "w", encoding="utf-8") as f:
+    f.write(COMMON_HEAD)
+    for s in SLIDES_HTML:
+        f.write(s)
+    f.write(COMMON_FOOT)
+print(f"Combined HTML written: {combined_html_path}")
+
+# 2. 寫入 8 個獨立 HTML 檔案（用於擷取每頁 1920x1080 高清 PNG 圖檔）
+single_html_paths = []
+for idx, s in enumerate(SLIDES_HTML, 1):
+    single_path = os.path.join(IMAGES_DIR, f"slide_{idx:02d}.html")
+    with open(single_path, "w", encoding="utf-8") as f:
+        f.write(COMMON_HEAD)
+        f.write(s)
+        f.write(COMMON_FOOT)
+    single_html_paths.append((idx, single_path))
+
+# 3. 使用 Chrome Headless 生成完整 PDF
+pdf_path = os.path.join(OUTPUT_DIR, "m1-簡報.pdf")
+cmd_pdf = [
+    CHROME_PATH,
+    "--headless",
+    "--disable-gpu",
+    "--no-pdf-header-footer",
+    f"--print-to-pdf={pdf_path}",
+    f"file://{combined_html_path}"
+]
+print("Generating PDF with Chrome...")
+res_pdf = subprocess.run(cmd_pdf, capture_output=True, text=True)
+if os.path.exists(pdf_path):
+    print(f"✓ PDF successfully generated: {pdf_path} ({os.path.getsize(pdf_path)} bytes)")
+else:
+    print(f"Error generating PDF: {res_pdf.stderr}")
+
+# 4. 使用 Chrome Headless 為每一頁截取 1920x1080 高解析度圖檔 (PNG)
+png_files = []
+for idx, single_path in single_html_paths:
+    png_path = os.path.join(IMAGES_DIR, f"slide_{idx:02d}.png")
+    cmd_img = [
+        CHROME_PATH,
+        "--headless",
+        "--disable-gpu",
+        "--window-size=1920,1080",
+        f"--screenshot={png_path}",
+        f"file://{single_path}"
+    ]
+    subprocess.run(cmd_img, capture_output=True, text=True)
+    if os.path.exists(png_path):
+        print(f"✓ Rendered Slide {idx:02d} Image: {png_path} ({os.path.getsize(png_path)} bytes)")
+        png_files.append(png_path)
+
+print("All tasks finished successfully!")
