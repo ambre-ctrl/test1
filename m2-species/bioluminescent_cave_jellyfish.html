@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>深邃洞窟生物螢光雙羽傘水母 - GitHub Modern Edition</title>
+    <!-- p5.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #03060c;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            user-select: none;
+            color: #c9d1d9;
+        }
+        canvas {
+            display: block;
+        }
+        .font-mono {
+            font-family: 'Fira Code', monospace;
+        }
+        /* GitHub Glassmorphism Dark Theme Styling */
+        .gh-card {
+            background: rgba(13, 17, 23, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(48, 54, 61, 0.8);
+            box-shadow: 0 12px 32px rgba(1, 4, 9, 0.7);
+        }
+        .gh-badge {
+            background: rgba(56, 139, 253, 0.15);
+            border: 1px solid rgba(56, 139, 253, 0.4);
+            color: #58a6ff;
+        }
+        .gh-btn {
+            background: rgba(22, 27, 34, 0.88);
+            border: 1px solid #30363d;
+            color: #c9d1d9;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .gh-btn:hover {
+            background: #30363d;
+            border-color: #8b949e;
+            color: #f0f6fc;
+            transform: translateY(-1px);
+        }
+        .gh-btn.active {
+            background: linear-gradient(135deg, rgba(236, 72, 153, 0.3), rgba(168, 85, 247, 0.2));
+            border-color: #ec4899;
+            color: #f472b6;
+            box-shadow: 0 0 16px rgba(236, 72, 153, 0.35);
+        }
+        .gh-btn-emerald.active {
+            background: linear-gradient(135deg, rgba(0, 255, 170, 0.3), rgba(16, 185, 129, 0.2));
+            border-color: #10b981;
+            color: #34d399;
+            box-shadow: 0 0 16px rgba(16, 185, 129, 0.35);
+        }
+        /* Custom Scrollbar for HUD */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(13, 17, 23, 0.5);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #30363d;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body class="w-full h-screen relative overflow-hidden bg-[#03060c] text-slate-200">
+
+    <!-- GitHub Top Navigation Header Overlay -->
+    <div class="absolute top-0 left-0 w-full z-20 px-4 py-3 flex items-center justify-between pointer-events-none">
+        <div class="flex items-center gap-3 pointer-events-auto">
+            <div class="w-8 h-8 rounded-full bg-[#161b22] border border-[#30363d] flex items-center justify-center text-pink-400 shadow-md">
+                <i class="fa-brands fa-github text-lg"></i>
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-semibold text-pink-400 font-mono tracking-wide">biome-lab / hyper-glowing-specimen</span>
+                    <span class="px-2 py-0.5 text-[10px] rounded-full gh-badge font-mono font-medium">v3.0-volumetric-glow</span>
+                </div>
+                <h1 class="text-sm font-bold text-slate-100 flex items-center gap-2">
+                    強光高能生物螢光水母 <span class="text-xs font-normal text-slate-400">(Volumetric Bioluminescent Organism)</span>
+                </h1>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 pointer-events-auto">
+            <div class="gh-card px-3 py-1.5 rounded-md flex items-center gap-2 text-xs font-mono">
+                <span class="w-2 h-2 rounded-full bg-pink-500 animate-pulse"></span>
+                <span class="text-slate-400">FPS:</span>
+                <span id="fps-counter" class="text-pink-400 font-bold">60</span>
+            </div>
+            <button onclick="toggleGlowColor()" id="btn-glow-color" class="gh-btn px-3 py-1.5 rounded-md text-xs flex items-center gap-1.5 font-medium">
+                <i class="fa-solid fa-wand-magic-sparkles text-pink-400"></i>
+                <span id="color-text">色系: 炫粉高能紫光</span>
+            </button>
+            <button onclick="toggleWireframe()" id="btn-wireframe" class="gh-btn px-3 py-1.5 rounded-md text-xs flex items-center gap-1.5 font-medium">
+                <i class="fa-solid fa-cube"></i>
+                <span id="wireframe-text">渲染: 粒子漸層網</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Left Interaction & Analytics HUD -->
+    <div class="absolute top-16 left-4 z-10 pointer-events-none flex flex-col gap-3 max-w-sm w-full">
+        <!-- Interactive Behavior Mode Switcher Panel -->
+        <div class="gh-card p-3.5 rounded-xl pointer-events-auto flex flex-col gap-2.5">
+            <div class="flex items-center justify-between pb-2 border-b border-[#30363d]">
+                <span class="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                    <i class="fa-solid fa-sliders text-emerald-400"></i> 生態行為互動切換
+                </span>
+                <span class="text-[10px] font-mono text-slate-500">HOTKEYS [1-4]</span>
+            </div>
+
+            <!-- Mode Selector Grid Buttons -->
+            <div class="grid grid-cols-2 gap-2">
+                <button id="mode-swim" onclick="setMode('SWIM')" class="gh-btn gh-btn-emerald active p-2.5 rounded-lg flex flex-col gap-1 text-left">
+                    <div class="flex items-center justify-between w-full">
+                        <span class="text-xs font-semibold flex items-center gap-1.5">
+                            <i class="fa-solid fa-water"></i> 水壓推進
+                        </span>
+                        <span class="text-[9px] font-mono px-1 rounded bg-slate-800 text-slate-400">1</span>
+                    </div>
+                    <span class="text-[10px] text-slate-400 leading-tight">橫向交替開合水力衝刺</span>
+                </button>
+
+                <button id="mode-hunt" onclick="setMode('HUNT')" class="gh-btn gh-btn-emerald p-2.5 rounded-lg flex flex-col gap-1 text-left">
+                    <div class="flex items-center justify-between w-full">
+                        <span class="text-xs font-semibold flex items-center gap-1.5">
+                            <i class="fa-solid fa-crosshairs"></i> 捕獵抓握
+                        </span>
+                        <span class="text-[9px] font-mono px-1 rounded bg-slate-800 text-slate-400">2</span>
+                    </div>
+                    <span class="text-[10px] text-slate-400 leading-tight">滑鼠點擊標點高速夾擊</span>
+                </button>
+
+                <button id="mode-crawl" onclick="setMode('CRAWL')" class="gh-btn gh-btn-emerald p-2.5 rounded-lg flex flex-col gap-1 text-left">
+                    <div class="flex items-center justify-between w-full">
+                        <span class="text-xs font-semibold flex items-center gap-1.5">
+                            <i class="fa-solid fa-mountain"></i> 壁面爬行
+                        </span>
+                        <span class="text-[9px] font-mono px-1 rounded bg-slate-800 text-slate-400">3</span>
+                    </div>
+                    <span class="text-[10px] text-slate-400 leading-tight">吸盤波浪肉質花朵行走</span>
+                </button>
+
+                <button id="mode-pulse" onclick="setMode('PULSE')" class="gh-btn gh-btn-emerald p-2.5 rounded-lg flex flex-col gap-1 text-left">
+                    <div class="flex items-center justify-between w-full">
+                        <span class="text-xs font-semibold flex items-center gap-1.5">
+                            <i class="fa-solid fa-bolt"></i> 生物脈衝
+                        </span>
+                        <span class="text-[9px] font-mono px-1 rounded bg-slate-800 text-slate-400">4</span>
+                    </div>
+                    <span class="text-[10px] text-slate-400 leading-tight">四葉草器官超頻閃爍</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Real-time Telemetry Analytics Box -->
+        <div class="gh-card p-3 rounded-xl pointer-events-auto">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                    <i class="fa-solid fa-chart-line text-pink-400"></i> 發光能階分析
+                </span>
+                <span id="status-badge" class="text-[10px] font-medium text-pink-400 px-2 py-0.5 rounded-full bg-pink-950/60 border border-pink-800/60">
+                    自主橫向巡航
+                </span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 text-xs font-mono">
+                <div class="bg-[#161b22] p-2 rounded-lg border border-[#30363d]">
+                    <div class="text-[10px] text-slate-500">水力噴射 (Speed)</div>
+                    <div id="stat-speed" class="text-pink-400 font-bold mt-0.5">3.2 m/s</div>
+                </div>
+                <div class="bg-[#161b22] p-2 rounded-lg border border-[#30363d]">
+                    <div class="text-[10px] text-slate-500">光學擴散 (Bloom)</div>
+                    <div id="stat-flex" class="text-cyan-400 font-bold mt-0.5">98.5 %</div>
+                </div>
+                <div class="bg-[#161b22] p-2 rounded-lg border border-[#30363d]">
+                    <div class="text-[10px] text-slate-500">螢光強度 (Photon)</div>
+                    <div id="stat-lumen" class="text-purple-300 font-bold mt-0.5">2450 lm</div>
+                </div>
+                <div class="bg-[#161b22] p-2 rounded-lg border border-[#30363d]">
+                    <div class="text-[10px] text-slate-500">粒子節點 (Nodes)</div>
+                    <div id="stat-adhesion" class="text-amber-400 font-bold mt-0.5">480 pcs</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls Guide Footer -->
+        <div class="gh-card p-2.5 rounded-lg text-[11px] text-slate-400 flex flex-col gap-1 pointer-events-auto">
+            <div class="flex items-center gap-1.5 text-slate-300 font-medium">
+                <i class="fa-solid fa-hand-pointer text-emerald-400"></i> 操作說明:
+            </div>
+            <div>• <strong>點擊畫面任何位置</strong>：觸發向該點高速橫向彈射</div>
+            <div>• <strong>拖曳滑鼠</strong>：360度旋轉觀察視角</div>
+            <div>• <strong>滑鼠滾輪</strong>：鏡頭拉近拉遠觀察內部四葉草與吸盤</div>
+        </div>
+    </div>
+
+    <script>
+    let creature;
+    let caveStalactites = [];
+    let caveStalagmites = [];
+    let particles = [];
+    let bioluminescentNodes = []; // 體內高能發光點雲群
+
+    // 視角與鏡頭控制
+    let camRotX = -0.15;
+    let camRotY = 0.0;
+    let targetCamRotX = -0.15;
+    let targetCamRotY = 0.0;
+    let camZoom = 0;
+    let targetCamZoom = 0;
+    let isDragging = false;
+    let lastMouseX = 0;
+    let lastMouseY = 0;
+
+    let glowPalette = 'PINK';
+    let isWireframe = false;
+
+    function setup() {
+        createCanvas(windowWidth, windowHeight, WEBGL);
+        pixelDensity(min(window.devicePixelRatio, 2));
+
+        // 啟用 WebGL 深度測試與加法混合 (Additive Blending) 模擬強烈極限發光
+        let gl = this._renderer.GL;
+        gl.enable(gl.DEPTH_TEST);
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE); // 加法光效混合
+
+        // 初始化環境與生物
+        initCaveEnvironment();
+
+        // 建立橫向結構生物 (x, y, z)
+        creature = new BioluminescentCreature(0, 0, 0);
+
+        // 建立環境懸浮發光微粒 (浮游生物粒雲)
+        for (let i = 0; i < 280; i++) {
+            particles.push({
+                x: random(-1000, 1000),
+                y: random(-600, 600),
+                z: random(-800, 800),
+                size: random(1.5, 6.0),
+                pulse: random(100),
+                speedX: random(-0.4, 0.4),
+                speedY: random(-0.2, 0.2),
+                colorType: random(['core', 'ambient', 'hot'])
+            });
+        }
+    }
+
+    function draw() {
+        background(3, 5, 11); // 深沉洞窟漆黑底色
+
+        if (frameCount % 10 === 0) {
+            document.getElementById('fps-counter').innerText = Math.round(frameRate());
+        }
+
+        // 鏡頭旋轉與縮放平滑內插
+        camRotX += (targetCamRotX - camRotX) * 0.08;
+        camRotY += (targetCamRotY - camRotY) * 0.08;
+        camZoom += (targetCamZoom - camZoom) * 0.08;
+
+        push();
+        translate(0, 0, -180 + camZoom);
+        rotateX(camRotX);
+        rotateY(camRotY);
+
+        // ----- 光影設定：增強強烈冷暖對比與自發光感 -----
+        directionalLight(20, 80, 200, 0.2, -0.8, -0.5);
+        pointLight(120, 40, 180, 0, -300, -400);
+
+        // 前景暖褐色石灰岩光照
+        pointLight(160, 90, 40, -500, -200, 300);
+        pointLight(140, 80, 30, 500, 300, 300);
+
+        // 生物自身核心光輝 (根據當前調色盤)
+        if (glowPalette === 'PINK') {
+            pointLight(255, 60, 180, creature.pos.x, creature.pos.y, creature.pos.z);
+            pointLight(255, 120, 220, creature.pos.x, creature.pos.y, creature.pos.z);
+        } else {
+            pointLight(0, 255, 180, creature.pos.x, creature.pos.y, creature.pos.z);
+            pointLight(80, 255, 220, creature.pos.x, creature.pos.y, creature.pos.z);
+        }
+        ambientLight(15, 18, 28);
+
+        // 渲染地下鐘乳石洞窟
+        drawCaveEnvironment();
+
+        // 渲染水體發光微粒點雲
+        drawFloatingParticles();
+
+        // 更新與渲染生物本體 (包含多層 Glow 與體內粒雲)
+        creature.update();
+        creature.display();
+
+        pop();
+
+        updateHUD();
+    }
+
+    class BioluminescentCreature {
+        constructor(x, y, z) {
+            this.pos = createVector(x, y, z);
+            this.vel = createVector(0, 0, 0);
+            this.acc = createVector(0, 0, 0);
+
+            this.mode = 'SWIM';
+            this.time = 0;
+            this.pulseCycle = 0;
+
+            this.targetPos = null;
+            this.crawlTarget = null;
+            this.crawlProgress = 0;
+
+            this.maxSpeed = 3.5;
+            this.umbrellaExpandLeft = 1.0;
+            this.umbrellaExpandRight = 1.0;
+            this.glowIntensity = 240;
+
+            this.initBodyGlowNodes();
+        }
+
+        initBodyGlowNodes() {
+            bioluminescentNodes = [];
+            for (let side = -1; side <= 1; side += 2) {
+                for (let i = 0; i < 180; i++) {
+                    let r = random(10, 95);
+                    let angle = random(TWO_PI);
+                    let yOffset = side * random(30, 105);
+                    bioluminescentNodes.push({
+                        side: side,
+                        baseR: r,
+                        angle: angle,
+                        yOffset: yOffset,
+                        size: random(2.0, 5.5),
+                        pulsePhase: random(TWO_PI),
+                        orbitSpeed: random(-0.02, 0.02)
+                    });
+                }
+            }
+        }
+
+        update() {
+            this.time += 0.035;
+
+            switch (this.mode) {
+                case 'SWIM':
+                    this.updateSwimBehavior();
+                    break;
+                case 'HUNT':
+                    this.updateHuntBehavior();
+                    break;
+                case 'CRAWL':
+                    this.updateCrawlBehavior();
+                    break;
+                case 'PULSE':
+                    this.updatePulseBehavior();
+                    break;
+            }
+
+            this.vel.add(this.acc);
+            this.vel.limit(this.maxSpeed);
+            this.pos.add(this.vel);
+            this.acc.mult(0);
+            this.vel.mult(0.95);
+
+            if (this.mode !== 'CRAWL') {
+                this.checkCaveCollision();
+            }
+        }
+
+        updateSwimBehavior() {
+            this.maxSpeed = 3.2;
+            this.pulseCycle += 0.05;
+
+            this.umbrellaExpandLeft = map(sin(this.pulseCycle), -1, 1, 0.7, 1.35);
+            this.umbrellaExpandRight = map(cos(this.pulseCycle), -1, 1, 0.7, 1.35);
+
+            if (sin(this.pulseCycle) > 0.88) {
+                let push = p5.Vector.random3D().mult(0.38);
+                push.y *= 0.2;
+                this.applyForce(push);
+            }
+
+            if (frameCount % 90 === 0) {
+                let wander = createVector(random(-0.8, 0.8), random(-0.2, 0.2), random(-0.5, 0.5));
+                this.applyForce(wander);
+            }
+
+            if (this.pos.mag() > 450) {
+                let centerDir = p5.Vector.sub(createVector(0, 0, 0), this.pos).setMag(0.25);
+                this.applyForce(centerDir);
+            }
+
+            this.glowIntensity = map(sin(this.time * 3), -1, 1, 200, 255);
+        }
+
+        updateHuntBehavior() {
+            this.maxSpeed = 12.0;
+            this.pulseCycle += 0.18;
+
+            if (this.targetPos) {
+                let desired = p5.Vector.sub(this.targetPos, this.pos);
+                let distToTarget = desired.mag();
+
+                if (distToTarget > 50) {
+                    desired.setMag(this.maxSpeed);
+                    let steer = p5.Vector.sub(desired, this.vel);
+                    steer.limit(1.0);
+                    this.applyForce(steer);
+
+                    this.umbrellaExpandLeft = map(sin(this.pulseCycle * 2), -1, 1, 1.25, 1.65);
+                    this.umbrellaExpandRight = map(cos(this.pulseCycle * 2), -1, 1, 1.25, 1.65);
+                } else {
+                    this.umbrellaExpandLeft = 0.5;
+                    this.umbrellaExpandRight = 0.5;
+                    this.mode = 'SWIM';
+                    this.targetPos = null;
+                }
+            } else {
+                this.mode = 'SWIM';
+            }
+
+            this.glowIntensity = 255;
+        }
+
+        updateCrawlBehavior() {
+            this.maxSpeed = 0.8;
+            this.crawlProgress += 0.04;
+
+            if (this.crawlTarget) {
+                let targetSurface = this.crawlTarget.pos.copy();
+                let dirToSurface = p5.Vector.sub(targetSurface, this.pos);
+
+                if (dirToSurface.mag() > 25) {
+                    dirToSurface.setMag(0.7);
+                    this.applyForce(dirToSurface);
+                } else {
+                    this.vel.mult(0.15);
+                    this.pos.x += sin(this.crawlProgress * 2) * 0.7;
+                    this.pos.y += cos(this.crawlProgress * 1.5) * 0.3;
+                }
+
+                this.umbrellaExpandLeft = 1.15 + sin(this.crawlProgress * 4) * 0.22;
+                this.umbrellaExpandRight = 1.15 + cos(this.crawlProgress * 4) * 0.22;
+
+                if (this.crawlProgress > 8.0) {
+                    this.mode = 'SWIM';
+                    let pushAway = p5.Vector.sub(this.pos, targetSurface).setMag(2.5);
+                    this.applyForce(pushAway);
+                }
+            } else {
+                this.mode = 'SWIM';
+            }
+        }
+
+        updatePulseBehavior() {
+            this.maxSpeed = 1.5;
+            this.pulseCycle += 0.25;
+
+            this.umbrellaExpandLeft = map(sin(this.pulseCycle * 3), -1, 1, 0.6, 1.5);
+            this.umbrellaExpandRight = map(sin(this.pulseCycle * 3), -1, 1, 0.6, 1.5);
+
+            this.glowIntensity = map(sin(this.pulseCycle * 4), -1, 1, 150, 255);
+
+            if (this.pulseCycle > 15) {
+                this.mode = 'SWIM';
+            }
+        }
+
+        checkCaveCollision() {
+            const obstacles = [...caveStalactites, ...caveStalagmites];
+            for (let obs of obstacles) {
+                let d = dist(this.pos.x, this.pos.y, this.pos.z, obs.pos.x, obs.pos.y, obs.pos.z);
+                if (d < obs.radius + 70) {
+                    this.crawlTarget = obs;
+                    break;
+                }
+            }
+        }
+
+        triggerHuntAt(targetVec) {
+            this.targetPos = targetVec;
+            this.mode = 'HUNT';
+        }
+
+        applyForce(f) {
+            this.acc.add(f);
+        }
+
+        display() {
+            push();
+            translate(this.pos.x, this.pos.y, this.pos.z);
+
+            // 橫向佈局
+            rotateZ(HALF_PI);
+
+            if (this.vel.mag() > 0.15) {
+                let headingY = atan2(this.vel.x, this.vel.z);
+                rotateY(headingY * 0.3);
+            }
+
+            rotateY(sin(this.time * 0.6) * 0.12);
+
+            // 1. 核心發光球體
+            this.drawGlowingCore();
+
+            // 2. 中央脊椎
+            this.drawSpine();
+
+            // 3. 四葉草口腕
+            this.drawCloverOralArms();
+
+            // 4. 左右雙羽傘粒子漸層捕網 (高密度的輻射點陣微粒與莫列波紋漸層效果)
+            push();
+            translate(0, -70, 0);
+            rotateX(PI);
+            this.drawGradientParticleNet(90 * this.umbrellaExpandLeft, 75, true);
+            pop();
+
+            push();
+            translate(0, 70, 0);
+            this.drawGradientParticleNet(98 * this.umbrellaExpandRight, 85, false);
+            pop();
+
+            // 5. 體內發光點陣
+            this.drawParticleNodeCloud();
+
+            pop();
+        }
+
+        // 重構：精細的圓形微型粒子陣列捕網（如參考圖：由中心向外高密度發散，漸層亮白至柔光邊緣）
+        drawGradientParticleNet(radius, height, isLeft) {
+            push();
+
+            const rays = 72;        // 72 條高密度輻射射線
+            const rings = 28;       // 28 層同心微粒環，構建超高密度捕網
+            const baseGlow = (glowPalette === 'PINK');
+
+            for (let r = 1; r <= rings; r++) {
+                let normR = r / rings; // 0.0 到 1.0 徑向漸層比例
+                
+                // 計算徑向彎曲與波動
+                let currentR = radius * normR;
+                let ringY = height * Math.pow(normR, 1.2) + sin(normR * PI * 2 + this.time * 2.5) * 3.5;
+                
+                // 莫列圖樣微擾波動 (調幅圖樣)
+                let waveIntensity = sin(normR * 12.0 - this.time * 3.0) * 0.5 + 0.5;
+
+                // 顏色與透明度漸層 calculations: 中心亮白白光 -> 中段高飽和螢光 -> 邊緣細緻高亮微光
+                let alpha, pSize;
+                if (normR < 0.25) {
+                    alpha = map(normR, 0, 0.25, 255, 200);
+                    pSize = map(normR, 0, 0.25, 2.2, 1.6);
+                } else if (normR < 0.75) {
+                    alpha = map(normR, 0.25, 0.75, 200, 140) * (0.8 + waveIntensity * 0.4);
+                    pSize = map(normR, 0.25, 0.75, 1.6, 1.1);
+                } else {
+                    alpha = map(normR, 0.75, 1.0, 140, 240); // 邊緣吸盤點亮起
+                    pSize = map(normR, 0.75, 1.0, 1.1, 2.8);
+                }
+
+                // 環向繪製精細點陣
+                for (let i = 0; i < rays; i++) {
+                    let angle = (i / rays) * TWO_PI;
+                    
+                    // 海洋動態波浪加成
+                    let radialOffset = (this.mode === 'CRAWL') ?
+                        sin(angle * 6 + this.crawlProgress * 8) * (normR * 8) :
+                        sin(angle * 4 + normR * 8 + this.time * 3) * 2.5;
+
+                    let finalR = currentR + radialOffset;
+                    let x = cos(angle) * finalR;
+                    let z = sin(angle) * finalR;
+
+                    push();
+                    translate(x, ringY, z);
+
+                    if (isWireframe) {
+                        stroke(baseGlow ? color(255, 120, 220, alpha) : color(80, 255, 200, alpha));
+                        strokeWeight(pSize);
+                        point(0, 0, 0);
+                    } else {
+                        noStroke();
+                        // 中心光點漸層，內白外彩
+                        if (normR < 0.3) {
+                            fill(255, 255, 255, alpha);
+                        } else if (baseGlow) {
+                            fill(lerpColor(color(255, 240, 255), color(255, 60, 180), normR), alpha);
+                        } else {
+                            fill(lerpColor(color(240, 255, 250), color(0, 255, 170), normR), alpha);
+                        }
+                        
+                        // 使用簡化精細立體微粒
+                        sphere(pSize);
+                    }
+                    pop();
+                }
+            }
+
+            // 繪製微米級相連線索（建構細緻捕網結構與幾何紋樣）
+            strokeWeight(0.5);
+            for (let i = 0; i < rays; i += 2) {
+                let angle = (i / rays) * TWO_PI;
+                noFill();
+                beginShape();
+                for (let r = 1; r <= rings; r += 2) {
+                    let normR = r / rings;
+                    let currentR = radius * normR;
+                    let ringY = height * Math.pow(normR, 1.2) + sin(normR * PI * 2 + this.time * 2.5) * 3.5;
+                    let x = cos(angle) * currentR;
+                    let z = sin(angle) * currentR;
+                    
+                    let lineAlpha = map(normR, 0, 1, 120, 30);
+                    stroke(baseGlow ? color(255, 160, 230, lineAlpha) : color(120, 255, 210, lineAlpha));
+                    vertex(x, ringY, z);
+                }
+                endShape();
+            }
+
+            pop();
+        }
+
+        // 渲染如參考圖片般的亮白核心光球與多重發光暈彩 (Volumetric Bloom Core)
+        drawGlowingCore() {
+            push();
+            noStroke();
+            fill(255, 240, 255, 255);
+            sphere(18);
+
+            if (glowPalette === 'PINK') {
+                fill(255, 80, 180, 180);
+                sphere(28);
+                fill(230, 40, 160, 90);
+                sphere(42);
+                fill(200, 20, 120, 40);
+                sphere(65);
+            } else {
+                fill(80, 255, 200, 180);
+                sphere(28);
+                fill(30, 230, 160, 90);
+                sphere(42);
+                fill(10, 180, 120, 40);
+                sphere(65);
+            }
+            pop();
+        }
+
+        drawSpine() {
+            push();
+            if (!isWireframe) {
+                noStroke();
+                if (glowPalette === 'PINK') {
+                    fill(255, 60, 180, 70);
+                    cylinder(14, 140, 16, 1);
+                    fill(255, 220, 250, this.glowIntensity);
+                    cylinder(6, 132, 12, 1);
+                } else {
+                    fill(0, 255, 170, 70);
+                    cylinder(14, 140, 16, 1);
+                    fill(220, 255, 240, this.glowIntensity);
+                    cylinder(6, 132, 12, 1);
+                }
+            }
+
+            stroke(glowPalette === 'PINK' ? color(255, 120, 220, 180) : color(80, 255, 200, 180));
+            strokeWeight(1.5);
+            noFill();
+            for (let y = -55; y <= 55; y += 15) {
+                push();
+                translate(0, y, 0);
+                rotateX(HALF_PI);
+                ellipse(0, 0, 28 + sin(this.time * 3 + y * 0.1) * 4);
+                pop();
+            }
+            pop();
+        }
+
+        drawCloverOralArms() {
+            push();
+            if (!isWireframe) {
+                noStroke();
+                fill(glowPalette === 'PINK' ? color(255, 160, 220, 220) : color(160, 255, 220, 220));
+            } else {
+                stroke(255, 160, 220, 200);
+            }
+
+            for (let i = 0; i < 4; i++) {
+                push();
+                rotateY(i * HALF_PI);
+                translate(15, 0, 0);
+                rotateZ(sin(this.time * 2.5 + i) * 0.15);
+                
+                if (!isWireframe) sphere(8.5);
+
+                stroke(glowPalette === 'PINK' ? color(255, 100, 200, 220) : color(100, 255, 180, 220));
+                strokeWeight(1.8);
+                noFill();
+                beginShape();
+                vertex(0, 0, 0);
+                bezierVertex(16, -10, 14, 24, 10, 20);
+                endShape();
+                pop();
+            }
+
+            if (!isWireframe) {
+                fill(255, 255, 255, 250);
+                sphere(6.5);
+            }
+            pop();
+        }
+
+        drawParticleNodeCloud() {
+            push();
+            noStroke();
+            let expandFactor = (this.umbrellaExpandLeft + this.umbrellaExpandRight) * 0.5;
+
+            for (let node of bioluminescentNodes) {
+                node.angle += node.orbitSpeed;
+                let pulse = sin(this.time * 4 + node.pulsePhase);
+                let currentR = node.baseR * expandFactor + pulse * 3.0;
+
+                let x = cos(node.angle) * currentR;
+                let z = sin(node.angle) * currentR;
+                let y = node.yOffset + pulse * 2.0;
+
+                push();
+                translate(x, y, z);
+
+                fill(255, 255, 255, 240);
+                sphere(node.size * 0.5);
+
+                if (glowPalette === 'PINK') {
+                    fill(255, 80, 180, map(pulse, -1, 1, 100, 220));
+                } else {
+                    fill(0, 255, 180, map(pulse, -1, 1, 100, 220));
+                }
+                sphere(node.size);
+                pop();
+            }
+            pop();
+        }
+    }
+
+    function initCaveEnvironment() {
+        for (let i = 0; i < 10; i++) {
+            caveStalactites.push({
+                pos: createVector(random(-700, 700), random(-400, -200), random(-600, 300)),
+                radius: random(30, 60),
+                height: random(220, 420),
+                seed: random(1000)
+            });
+        }
+
+        for (let i = 0; i < 9; i++) {
+            caveStalagmites.push({
+                pos: createVector(random(-750, 750), random(220, 450), random(-600, 300)),
+                radius: random(35, 75),
+                height: random(250, 480),
+                seed: random(2000)
+            });
+        }
+    }
+
+    function drawCaveEnvironment() {
+        push();
+        fill(45, 35, 30);
+        stroke(25, 18, 15);
+        strokeWeight(0.5);
+
+        for (let stal of caveStalactites) {
+            push();
+            translate(stal.pos.x, stal.pos.y, stal.pos.z);
+            drawOrganicCone(stal.radius, stal.height, true, stal.seed);
+            pop();
+        }
+
+        for (let stal of caveStalagmites) {
+            push();
+            translate(stal.pos.x, stal.pos.y, stal.pos.z);
+            drawOrganicCone(stal.radius, stal.height, false, stal.seed);
+            pop();
+        }
+        pop();
+    }
+
+    function drawOrganicCone(radius, height, isDescending, seed) {
+        let detail = 8;
+        let layers = 6;
+        let dir = isDescending ? 1 : -1;
+
+        for (let l = 0; l < layers; l++) {
+            let y1 = (l / layers) * height * dir;
+            let y2 = ((l + 1) / layers) * height * dir;
+            let r1 = map(l, 0, layers, radius, 2);
+            let r2 = map(l + 1, 0, layers, radius, 2);
+
+            beginShape(TRIANGLE_STRIP);
+            for (let i = 0; i <= detail; i++) {
+                let angle = map(i, 0, detail, 0, TWO_PI);
+                let n1 = noise(cos(angle) + seed, sin(angle) + seed, l * 0.25) * 10;
+                let n2 = noise(cos(angle) + seed, sin(angle) + seed, (l + 1) * 0.25) * 10;
+
+                let x1 = cos(angle) * (r1 + n1);
+                let z1 = sin(angle) * (r1 + n1);
+                let x2 = cos(angle) * (r2 + n2);
+                let z2 = sin(angle) * (r2 + n2);
+
+                vertex(x1, y1, z1);
+                vertex(x2, y2, z2);
+            }
+            endShape();
+        }
+    }
+
+    function drawFloatingParticles() {
+        push();
+        noStroke();
+        for (let p of particles) {
+            p.x += p.speedX;
+            p.y += p.speedY;
+
+            if (p.x > 1000) p.x = -1000;
+            if (p.x < -1000) p.x = 1000;
+            if (p.y > 600) p.y = -600;
+            if (p.y < -600) p.y = 600;
+
+            let alpha = map(sin(frameCount * 0.04 + p.pulse), -1, 1, 50, 240);
+
+            if (glowPalette === 'PINK') {
+                fill(255, p.colorType === 'hot' ? 220 : 80, 180, alpha);
+            } else {
+                fill(p.colorType === 'hot' ? 220 : 60, 255, 190, alpha);
+            }
+
+            push();
+            translate(p.x, p.y, p.z);
+            sphere(p.size);
+            pop();
+        }
+        pop();
+    }
+
+    function setMode(modeKey) {
+        if (!creature) return;
+        creature.mode = modeKey;
+
+        const btnMap = {
+            'SWIM': 'mode-swim',
+            'HUNT': 'mode-hunt',
+            'CRAWL': 'mode-crawl',
+            'PULSE': 'mode-pulse'
+        };
+
+        Object.values(btnMap).forEach(id => {
+            document.getElementById(id).classList.remove('active');
+        });
+
+        if (btnMap[modeKey]) {
+            document.getElementById(btnMap[modeKey]).classList.add('active');
+        }
+    }
+
+    function toggleGlowColor() {
+        glowPalette = (glowPalette === 'PINK') ? 'EMERALD' : 'PINK';
+        const text = document.getElementById('color-text');
+        text.innerText = (glowPalette === 'PINK') ? '色系: 炫粉高能紫光' : '色系: 翡翠薄荷綠光';
+    }
+
+    function toggleWireframe() {
+        isWireframe = !isWireframe;
+        const text = document.getElementById('wireframe-text');
+        text.innerText = isWireframe ? '渲染: 純點陣模式' : '渲染: 粒子漸層網';
+    }
+
+    function mousePressed(e) {
+        if (e.target.tagName === 'CANVAS') {
+            isDragging = true;
+            lastMouseX = mouseX;
+            lastMouseY = mouseY;
+
+            let targetX = map(mouseX, 0, width, -500, 500);
+            let targetY = map(mouseY, 0, height, -350, 350);
+            let targetZ = random(-150, 150);
+
+            creature.triggerHuntAt(createVector(targetX, targetY, targetZ));
+            setMode('HUNT');
+        }
+    }
+
+    function mouseDragged(e) {
+        if (isDragging) {
+            let dx = mouseX - lastMouseX;
+            let dy = mouseY - lastMouseY;
+
+            targetCamRotY += dx * 0.007;
+            targetCamRotX = constrain(targetCamRotX + dy * 0.007, -PI * 0.4, PI * 0.4);
+
+            lastMouseX = mouseX;
+            lastMouseY = mouseY;
+        }
+    }
+
+    function mouseReleased() {
+        isDragging = false;
+    }
+
+    function mouseWheel(event) {
+        targetCamZoom = constrain(targetCamZoom - event.delta * 0.5, -300, 400);
+        return false;
+    }
+
+    function keyPressed() {
+        if (key === '1') setMode('SWIM');
+        else if (key === '2') setMode('HUNT');
+        else if (key === '3') setMode('CRAWL');
+        else if (key === '4') setMode('PULSE');
+        else if (key === 'c' || key === 'C') toggleGlowColor();
+        else if (key === 'w' || key === 'W') toggleWireframe();
+    }
+
+    function windowResized() {
+        resizeCanvas(windowWidth, windowHeight);
+    }
+
+    function updateHUD() {
+        if (!creature) return;
+
+        const badge = document.getElementById('status-badge');
+        const speedEl = document.getElementById('stat-speed');
+        const flexEl = document.getElementById('stat-flex');
+        const lumenEl = document.getElementById('stat-lumen');
+        const adhesionEl = document.getElementById('stat-adhesion');
+
+        const speedVal = (creature.vel.mag() * 1.8).toFixed(1);
+        speedEl.innerText = `${speedVal} m/s`;
+
+        const flexVal = (creature.umbrellaExpandLeft * 82).toFixed(1);
+        flexEl.innerText = `${flexVal} %`;
+
+        lumenEl.innerText = `${Math.round(creature.glowIntensity * 9.8)} lm`;
+
+        if (creature.mode === 'CRAWL') {
+            adhesionEl.innerText = `360 pcs`;
+            badge.innerText = `壁面吸附波浪前行`;
+            badge.className = "text-[10px] font-medium text-amber-300 px-2 py-0.5 rounded-full bg-amber-950/60 border border-amber-800/60";
+        } else if (creature.mode === 'HUNT') {
+            adhesionEl.innerText = `480 pcs`;
+            badge.innerText = `捕獵橫向超頻衝刺`;
+            badge.className = "text-[10px] font-medium text-pink-300 px-2 py-0.5 rounded-full bg-pink-950/60 border border-pink-800/60";
+        } else if (creature.mode === 'PULSE') {
+            adhesionEl.innerText = `520 pcs`;
+            badge.innerText = `器官高能脈衝共振`;
+            badge.className = "text-[10px] font-medium text-purple-300 px-2 py-0.5 rounded-full bg-purple-950/60 border border-purple-800/60";
+        } else {
+            adhesionEl.innerText = `360 pcs`;
+            badge.innerText = `自主橫向巡航`;
+            badge.className = "text-[10px] font-medium text-pink-400 px-2 py-0.5 rounded-full bg-pink-950/60 border border-pink-800/60";
+        }
+    }
+    </script>
+</body>
+</html>
