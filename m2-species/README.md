@@ -10,7 +10,7 @@
 
 ## 這一站要交的四件套
 
-- [x] 程式碼：會動的雛形（`index.html` 與 `sketch.js`，另附 Three.js PBR 月水母菲涅爾漸層渲染版 `bioluminescent_cave_jellyfish_threejs.html`）
+- [x] 程式碼：會動的雛形（`index.html` 與 `sketch.js`，另附 Three.js PBR 雙羽月水母菲涅爾漸層 ✕ 櫛水母彩光包膜核心版 `bioluminescent_cave_jellyfish_threejs.html`）
 - [x] 截圖或影片：牠動起來的樣子（截圖組與螢幕錄影 `m2-species-demo.mov`）
 - [ ] 反思：下面那段，一百到兩百字，自己寫（請見下方反思區）
 - [x] AI 揭露欄：下面的表格

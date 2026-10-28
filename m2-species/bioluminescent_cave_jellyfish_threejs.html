@@ -89,7 +89,7 @@ canvas { display: block; }
       <i class="fa-solid fa-gem text-cyan-400 animate-spin text-lg"></i>
       <span class="text-cyan-400 font-mono text-xs font-bold tracking-wider">BIOLUMINESCENT CAVE HYDROZOA</span>
     </div>
-    <div class="text-[11px] text-slate-400 mb-3 font-mono">月水母漸層薄膜 · 核心發光軸線 · 傘底生長觸手 · 緣生珍珠圈</div>
+    <div class="text-[11px] text-slate-400 mb-3 font-mono">月水母漸層薄膜 · 櫛水母彩光包膜核心 · 傘底生長觸手 · 緣生珍珠圈</div>
     <div class="loader-bar"><i></i></div>
   </div>
 </div>
@@ -103,11 +103,11 @@ canvas { display: block; }
     <div>
       <div class="flex items-center gap-2">
         <span class="text-xs font-semibold text-cyan-400 font-mono tracking-wide">CAVE-BIOME / SPECIMEN-M2</span>
-        <span class="px-2 py-0.5 text-[10px] rounded-full gh-badge font-mono font-medium">v9.0-MoonJelly-Gradient</span>
+        <span class="px-2 py-0.5 text-[10px] rounded-full gh-badge font-mono font-medium">v10.0-Ctenophore-Core</span>
       </div>
       <h1 class="text-sm font-bold text-slate-100 flex items-center gap-2">
         深邃幽藍月水母漸層雙羽水母
-        <span class="text-xs font-normal text-cyan-300 hidden sm:inline">(菲涅爾透光漸層 · 核心發光中軸 · 傘底長觸手 · 緣珍珠圈)</span>
+        <span class="text-xs font-normal text-cyan-300 hidden sm:inline">(菲涅爾透光漸層 · 櫛水母彩光包膜核心 · 傘底長觸手 · 緣珍珠圈)</span>
       </h1>
     </div>
   </div>
@@ -190,8 +190,8 @@ canvas { display: block; }
         <div id="stat-tentacles" class="text-lime-300 font-bold mt-0.5">8 隻 (生自傘腔底)</div>
       </div>
       <div class="bg-[#08101c] p-2 rounded-lg border border-[#162436]">
-        <div class="text-[10px] text-slate-400">核心發光軸線 (Core Glow)</div>
-        <div id="stat-core" class="text-cyan-300 font-bold mt-0.5">高能光纖流體中軸</div>
+        <div class="text-[10px] text-slate-400">核心彩光包膜 (Ctenophore Core)</div>
+        <div id="stat-core" class="text-cyan-300 font-bold mt-0.5">8道繞射彩虹櫛板光帶</div>
       </div>
       <div class="bg-[#08101c] p-2 rounded-lg border border-[#162436]">
         <div class="text-[10px] text-slate-400">傘緣發光珍珠圈 (Marginal Pearls)</div>
@@ -211,6 +211,7 @@ canvas { display: block; }
     </div>
     <div class="text-[10px] leading-relaxed text-slate-300">
       • <strong>水母.jpg 仿真月水母漸層</strong>：自製菲涅爾散射 Shader，頂部深黑藍過渡至傘緣剔透乳青白光，具備真實水母煙燻玻璃質感。<br>
+      • <strong>融合 800x.jpg 櫛水母奇特彩光包膜</strong>：於核心中樞構建櫛水母微稜晶質包膜外囊，具備 8 道真實光學繞射彩虹櫛板排（Ctene rows），呈現電紫、天青、金綠與洋紅交錯的橫向微櫛齒行進光波；囊內透射乳白微光內臟核與橫向輻射胃管，底部延伸優雅微光拖曳長絲。<br>
       • <strong>核心線條全發光</strong>：中央脊椎中軸、4道外彎弧筋與四瓣花輪轉化為高能生物光纖線，明亮發光。<br>
       • <strong>觸手改自傘狀構造底部生長</strong>：上下傘腔底（Y=±52）各長出4隻黃綠色半透明觸手，向外並各自朝上/下蔓延擺動。<br>
       • <strong>恢復傘緣整圈大顆發光珍珠</strong>：取消雜亂的5層微粒，回歸上下各32顆醒目圓球翠綠發光珍珠球。
@@ -378,7 +379,8 @@ for (let i = 0; i < 4; i++) {
   for (let j = 0; j <= segments; j++) {
     const v = j / segments;
     const y = -52 + v * 104;
-    const bowRadius = 4.5 + 9.0 * Math.sin(v * Math.PI);
+    // Bows out to 20.4 at equator (y=0), gracefully embracing the ctenophore capsule (r=17.0)
+    const bowRadius = 4.8 + 15.6 * Math.sin(v * Math.PI);
     pts.push(new THREE.Vector3(Math.cos(angle) * bowRadius, y, Math.sin(angle) * bowRadius));
   }
   const curve = new THREE.CatmullRomCurve3(pts);
@@ -409,48 +411,339 @@ stalkGroup.add(spineNodes);
 });
 
 // -------------------------------------------------------------
-// 5. Central Flower Structure (Glowing Luminous Core)
+// 5. Central Flower Structure & Ctenophore Iridescent Core Capsule
+// (融合 800x.jpg 櫛水母奇特彩光包膜、8道繞射彩虹櫛板與內臟核)
 // -------------------------------------------------------------
 const centerFlower = new THREE.Group();
 centerFlower.position.y = 0;
 creature.add(centerFlower);
 
+// A. Inner Visceral Core (800x.jpg 中心乳白微光內臟核與消化腔)
 const nucleusCore = new THREE.Mesh(
-  new THREE.SphereGeometry(5.4, 28, 20),
-  new THREE.MeshBasicMaterial({ color: 0xffffff })
+  new THREE.SphereGeometry(4.2, 24, 18),
+  new THREE.MeshStandardMaterial({
+    color: 0xffffff,
+    emissive: 0xdbeafe,
+    emissiveIntensity: 1.2,
+    roughness: 0.35
+  })
 );
+nucleusCore.scale.set(1.0, 1.35, 1.0);
+
 const nucleusShell = new THREE.Mesh(
-  new THREE.SphereGeometry(9.4, 32, 24),
+  new THREE.SphereGeometry(7.6, 28, 20),
   new THREE.MeshPhysicalMaterial({
-    color: P.primaryGlow,
-    emissive: P.secondaryGlow,
-    emissiveIntensity: 2.8,
-    roughness: 0.12,
-    transmission: 0.82,
+    color: 0xdbeafe,
+    emissive: 0x38bdf8,
+    emissiveIntensity: 0.8,
+    roughness: 0.28,
+    transmission: 0.88,
     thickness: 1.2,
     transparent: true,
-    opacity: 0.9,
+    opacity: 0.85,
     clearcoat: 1.0
   })
 );
+nucleusShell.scale.set(1.0, 1.30, 1.0);
 centerFlower.add(nucleusCore, nucleusShell);
 
-const bioLightCenter = new THREE.PointLight(P.beadLight, 320, 650, 1.8);
+const bioLightCenter = new THREE.PointLight(P.beadLight, 80, 480, 2.0);
 centerFlower.add(bioLightCenter);
 
+// B. Ctenophore Iridescent Capsule Membrane (800x.jpg 奇特彩光包膜 Shader)
+function createCtenophoreCapsuleGeometry() {
+  const segsY = 48, segsTheta = 64;
+  const positions = [], uvs = [], indices = [];
+  const halfH = 27.0;
+  const rMid = 17.0;
+  const rPole = 5.2;
+
+  for (let i = 0; i <= segsY; i++) {
+    const v = i / segsY;
+    const y = -halfH + v * (halfH * 2.0);
+    const eta = y / halfH; // [-1, 1]
+    const barrel = Math.pow(Math.max(0.0, 1.0 - eta * eta), 0.42);
+    const baseR = rPole + (rMid - rPole) * barrel;
+
+    for (let j = 0; j <= segsTheta; j++) {
+      const u = j / segsTheta;
+      const angle = u * TAU;
+      // 8-lobed fluted cross-section (櫛水母特徵 8 瓣縱向微稜)
+      const flute = 1.0 + 0.045 * Math.cos(8.0 * angle);
+      const r = baseR * flute;
+
+      positions.push(r * Math.cos(angle), y, r * Math.sin(angle));
+      uvs.push(u, v);
+    }
+  }
+
+  for (let i = 0; i < segsY; i++) {
+    for (let j = 0; j < segsTheta; j++) {
+      const a = i * (segsTheta + 1) + j;
+      const b = (i + 1) * (segsTheta + 1) + j;
+      const c = (i + 1) * (segsTheta + 1) + (j + 1);
+      const d = i * (segsTheta + 1) + (j + 1);
+      indices.push(a, b, d);
+      indices.push(b, c, d);
+    }
+  }
+
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  geo.setIndex(indices);
+  geo.computeVertexNormals();
+  return geo;
+}
+
+const ctenophoreShader = {
+  uniforms: {
+    uTime: { value: 0 },
+    uColorBase: { value: P.membraneBase },
+    uColorRim: { value: P.membraneRim },
+    uPulseSpeed: { value: 1.0 },
+    uDiffractionIntensity: { value: 1.0 }
+  },
+  vertexShader: `
+    varying vec3 vNormal;
+    varying vec3 vViewPosition;
+    varying vec3 vWorldPosition;
+    varying vec2 vUv;
+    varying float vY;
+
+    void main() {
+      vUv = uv;
+      vNormal = normalize(normalMatrix * normal);
+      vec4 worldPos = modelMatrix * vec4(position, 1.0);
+      vWorldPosition = worldPos.xyz;
+      vY = position.y;
+      vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+      vViewPosition = -mvPosition.xyz;
+      gl_Position = projectionMatrix * mvPosition;
+    }
+  `,
+  fragmentShader: `
+    uniform float uTime;
+    uniform vec3 uColorBase;
+    uniform vec3 uColorRim;
+    uniform float uPulseSpeed;
+    uniform float uDiffractionIntensity;
+
+    varying vec3 vNormal;
+    varying vec3 vViewPosition;
+    varying vec3 vWorldPosition;
+    varying vec2 vUv;
+    varying float vY;
+
+    // Authentic optical diffraction color spectrum recreating 800x.jpg comb jelly
+    vec3 spectralRainbow(float t) {
+      t = fract(t);
+      vec3 c;
+      if (t < 0.20) {
+        // Electric violet to deep blue
+        c = mix(vec3(0.58, 0.16, 1.0), vec3(0.12, 0.42, 1.0), t / 0.20);
+      } else if (t < 0.40) {
+        // Bright cyan to aqua-emerald
+        c = mix(vec3(0.0, 0.95, 1.0), vec3(0.06, 0.98, 0.60), (t - 0.20) / 0.20);
+      } else if (t < 0.60) {
+        // Emerald green to amber gold
+        c = mix(vec3(0.06, 0.98, 0.60), vec3(1.0, 0.85, 0.18), (t - 0.40) / 0.20);
+      } else if (t < 0.80) {
+        // Golden orange to vivid hot magenta
+        c = mix(vec3(1.0, 0.85, 0.18), vec3(1.0, 0.18, 0.68), (t - 0.60) / 0.20);
+      } else {
+        // Hot magenta back to electric violet
+        c = mix(vec3(1.0, 0.18, 0.68), vec3(0.58, 0.16, 1.0), (t - 0.80) / 0.20);
+      }
+      return c;
+    }
+
+    void main() {
+      vec3 N = normalize(vNormal);
+      vec3 V = normalize(vViewPosition);
+      float NdotV = abs(dot(N, V));
+
+      // 1. Transparent Gelatinous Capsule Body & Fresnel Rim
+      float fresnel = pow(clamp(1.0 - NdotV, 0.0, 1.0), 2.2);
+      vec3 baseGel = mix(vec3(0.008, 0.02, 0.05), vec3(0.02, 0.08, 0.16), fresnel);
+
+      // Rim iridescent thin-film shimmer
+      float rimPhase = fract(vY * 0.02 + uTime * 0.18 + fresnel * 0.5);
+      vec3 rimRainbow = spectralRainbow(rimPhase);
+      vec3 rimGlow = mix(uColorRim, rimRainbow, 0.40) * pow(fresnel, 2.0) * 1.5;
+
+      // 2. 8 Meridional Comb Rows (8道縱向櫛板列 - 對齊脊骨稜線)
+      float uLong = vUv.x;
+      float combFrac = fract(uLong * 8.0);
+      float distToRib = min(combFrac, 1.0 - combFrac); // 0.0 位於櫛板稜脊正中心，0.5 為兩肋間膠質隙
+      float ribCore = smoothstep(0.065, 0.010, distToRib);
+      float ribHalo = smoothstep(0.18, 0.03, distToRib);
+
+      // 3. Transverse Cilia Micro-Plates (橫向櫛齒階梯微結構波 - 如800x.jpg)
+      float ciliaWave = sin(vY * 4.5 - uTime * 7.5 * uPulseSpeed);
+      float ciliaSteps = pow(clamp(ciliaWave * 0.5 + 0.5, 0.0, 1.0), 2.5);
+
+      // 4. Optical Diffraction Iridescence along Comb Rows (800x.jpg signature rainbow)
+      float specPhase = fract((vY / 54.0) * 1.5 - uTime * 0.85 * uPulseSpeed + NdotV * 0.35);
+      vec3 combColor = spectralRainbow(specPhase);
+
+      vec3 combLight = combColor * (1.8 + 2.6 * ciliaSteps) * ribCore * 2.8 * uDiffractionIntensity;
+      vec3 combHalo = combColor * ribHalo * 0.85 * (0.8 + 0.4 * ciliaWave);
+
+      // 5. Inner Visceral Transmitted Glow
+      float coreDist = length(vec2(vWorldPosition.x, vWorldPosition.z));
+      float corePenetration = exp(-coreDist * 0.12) * (1.0 - fresnel * 0.5);
+      vec3 visceralGlow = vec3(0.85, 0.92, 1.0) * corePenetration * 0.32;
+
+      // Combine layers
+      vec3 finalColor = baseGel + rimGlow + combLight + combHalo + visceralGlow;
+
+      // Glassy gelatin transparency
+      float alpha = 0.14 + fresnel * 0.58 + ribCore * 0.75 + ribHalo * 0.22;
+      alpha = clamp(alpha, 0.0, 0.96);
+
+      gl_FragColor = vec4(finalColor, alpha);
+    }
+  `
+};
+
+const ctenophoreMembraneMat = new THREE.ShaderMaterial({
+  uniforms: THREE.UniformsUtils.clone(ctenophoreShader.uniforms),
+  vertexShader: ctenophoreShader.vertexShader,
+  fragmentShader: ctenophoreShader.fragmentShader,
+  transparent: true,
+  side: THREE.DoubleSide,
+  depthWrite: false,
+  blending: THREE.NormalBlending
+});
+
+const ctenophoreCapsuleGeo = createCtenophoreCapsuleGeometry();
+const ctenophoreCapsuleMesh = new THREE.Mesh(ctenophoreCapsuleGeo, ctenophoreMembraneMat);
+centerFlower.add(ctenophoreCapsuleMesh);
+
+// C. Dynamic Spectrum Palette for Micro-ctene Beads
+const specColors = [
+  new THREE.Color(0x8b5cf6), // Violet
+  new THREE.Color(0x06b6d4), // Cyan
+  new THREE.Color(0x10b981), // Emerald
+  new THREE.Color(0xf59e0b), // Amber
+  new THREE.Color(0xec4899)  // Magenta
+];
+function getSpectrumColor(val) {
+  const p = ((val % 1) + 1) % 1;
+  const scaled = p * specColors.length;
+  const idx0 = Math.floor(scaled);
+  const idx1 = (idx0 + 1) % specColors.length;
+  const f = scaled - idx0;
+  return new THREE.Color().lerpColors(specColors[idx0], specColors[idx1], f);
+}
+
+// D. 8 Physical 3D Comb Rib Tracks & Micro-Cilia Plates
+const ctenoRibGroup = new THREE.Group();
+centerFlower.add(ctenoRibGroup);
+
+const ctenoRibs = [];
+const ctenoBeads = [];
+
+for (let r = 0; r < 8; r++) {
+  const angle = (r / 8) * TAU;
+  const pts = [];
+  const segments = 24;
+  const halfH = 27.0;
+  const rMid = 17.0;
+  const rPole = 5.2;
+
+  for (let s = 0; s <= segments; s++) {
+    const v = s / segments;
+    const y = -halfH + v * (halfH * 2.0);
+    const eta = y / halfH;
+    const barrel = Math.pow(Math.max(0.0, 1.0 - eta * eta), 0.42);
+    const baseR = rPole + (rMid - rPole) * barrel;
+    const flute = 1.0 + 0.045 * Math.cos(8.0 * angle);
+    const radius = baseR * flute + 0.22;
+
+    pts.push(new THREE.Vector3(radius * Math.cos(angle), y, radius * Math.sin(angle)));
+  }
+
+  const curve = new THREE.CatmullRomCurve3(pts);
+  const ribGeo = new THREE.TubeGeometry(curve, 32, 0.32, 8, false);
+  const ribMesh = new THREE.Mesh(ribGeo, coreGlowLineMat);
+  ctenoRibGroup.add(ribMesh);
+  ctenoRibs.push({ mesh: ribMesh, curve, angle, points: pts });
+
+  const BEADS_COUNT = 12;
+  for (let b = 1; b < BEADS_COUNT; b++) {
+    const u = b / BEADS_COUNT;
+    const pt = curve.getPointAt(u);
+    const beadMat = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      emissive: new THREE.Color(0x7928ca),
+      emissiveIntensity: 3.5,
+      roughness: 0.1
+    });
+    const bead = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.45, 0.75), beadMat);
+    bead.position.copy(pt);
+    bead.lookAt(new THREE.Vector3(0, pt.y, 0));
+    ctenoRibGroup.add(bead);
+    ctenoBeads.push({ mesh: bead, mat: beadMat, u, ribIndex: r, baseY: pt.y });
+  }
+}
+
+// E. 8 Glowing Radial Canals (橫向胃管分支)
+const radialCanalGroup = new THREE.Group();
+centerFlower.add(radialCanalGroup);
+
+for (let r = 0; r < 8; r++) {
+  const angle = (r / 8) * TAU;
+  const p0 = new THREE.Vector3(0, 0, 0);
+  const p1 = new THREE.Vector3(Math.cos(angle) * 8.5, 0, Math.sin(angle) * 8.5);
+  const p2 = new THREE.Vector3(Math.cos(angle) * 17.0, 0, Math.sin(angle) * 17.0);
+
+  const canalCurve = new THREE.CatmullRomCurve3([p0, p1, p2]);
+  const canalGeo = new THREE.TubeGeometry(canalCurve, 14, 0.28, 8, false);
+  const canalMesh = new THREE.Mesh(canalGeo, coreGlowLineMat);
+  radialCanalGroup.add(canalMesh);
+}
+
+// F. Iconic trailing silk filament from 800x.jpg (底部單條優雅長絲)
+const ctenoSilkPts = [];
+const CTENO_SILK_SEGS = 32;
+const ctenoSilkStartY = -27.0;
+for (let j = 0; j <= CTENO_SILK_SEGS; j++) {
+  ctenoSilkPts.push(new THREE.Vector3(0, ctenoSilkStartY - j * 4.2, 0));
+}
+const ctenoSilkCurve = new THREE.CatmullRomCurve3(ctenoSilkPts);
+const ctenoSilkGeo = new THREE.TubeGeometry(ctenoSilkCurve, 40, 0.38, 8, false);
+const ctenoSilkMat = new THREE.MeshStandardMaterial({
+  color: 0x80eeff,
+  emissive: 0x00f0ff,
+  emissiveIntensity: 3.8,
+  roughness: 0.2
+});
+const ctenoSilkMesh = new THREE.Mesh(ctenoSilkGeo, ctenoSilkMat);
+centerFlower.add(ctenoSilkMesh);
+
+const ctenoSilkTipBead = new THREE.Mesh(
+  new THREE.SphereGeometry(1.2, 12, 12),
+  new THREE.MeshBasicMaterial({ color: 0xffffff })
+);
+centerFlower.add(ctenoSilkTipBead);
+
+// G. Four Petals (Surrounding the Ctenophore Capsule Equator)
 const petalGroup = new THREE.Group();
 centerFlower.add(petalGroup);
 
 function createPetalGeometry() {
   const segsU = 22, segsV = 14;
   const positions = [], uvs = [], indices = [];
-  const length = 28.0;
+  const startRadius = 16.0;
+  const length = 22.0;
 
   for (let i = 0; i <= segsU; i++) {
     const u = i / segsU;
-    const currentL = u * length;
-    const maxWidth = 13.5 * Math.sin(u * Math.PI) * Math.pow(1.0 - u * 0.2, 0.75);
-    const archY = 3.8 * Math.sin(u * Math.PI) * (1.0 - u);
+    const currentL = startRadius + u * length;
+    const maxWidth = 12.0 * Math.sin(u * Math.PI) * Math.pow(1.0 - u * 0.2, 0.75);
+    const archY = 3.6 * Math.sin(u * Math.PI) * (1.0 - u);
 
     for (let j = 0; j <= segsV; j++) {
       const v = j / segsV;
@@ -511,7 +804,7 @@ for (let i = 0; i < 4; i++) {
   const spinePts = [];
   for (let k = 0; k <= 10; k++) {
     const u = k / 10;
-    spinePts.push(new THREE.Vector3(u * 28, 3.8 * Math.sin(u * Math.PI) * (1.0 - u), 0));
+    spinePts.push(new THREE.Vector3(16.0 + u * 22.0, 3.6 * Math.sin(u * Math.PI) * (1.0 - u), 0));
   }
   const spineMesh = new THREE.Mesh(
     new THREE.TubeGeometry(new THREE.CatmullRomCurve3(spinePts), 16, 0.38, 8, false),
@@ -523,13 +816,13 @@ for (let i = 0; i < 4; i++) {
     new THREE.SphereGeometry(1.4, 14, 14),
     new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: P.primaryGlow, emissiveIntensity: 4.5 })
   );
-  tipPearl.position.set(28, 0, 0);
+  tipPearl.position.set(38.0, 0, 0);
   pGroup.add(tipPearl);
 
   petalGroup.add(pGroup);
 }
 
-// 12 Curving Cirri Filaments
+// H. 12 Curving Cirri Filaments
 const filamentGroup = new THREE.Group();
 centerFlower.add(filamentGroup);
 const filaments = [];
@@ -538,11 +831,11 @@ for (let i = 0; i < 12; i++) {
   const baseAngle = (i / 12) * TAU;
   const isUp = i % 2 === 0;
 
-  const p0 = new THREE.Vector3(Math.cos(baseAngle) * 7, 0, Math.sin(baseAngle) * 7);
-  const p1 = new THREE.Vector3(Math.cos(baseAngle + 0.18) * 19, isUp ? 9 : -9, Math.sin(baseAngle + 0.18) * 19);
-  const p2 = new THREE.Vector3(Math.cos(baseAngle + 0.4) * 33, isUp ? 5 : -5, Math.sin(baseAngle + 0.4) * 33);
-  const p3 = new THREE.Vector3(Math.cos(baseAngle + 0.65) * 38, isUp ? -10 : 10, Math.sin(baseAngle + 0.65) * 38);
-  const p4 = new THREE.Vector3(Math.cos(baseAngle + 0.9) * 31, isUp ? -20 : 20, Math.sin(baseAngle + 0.9) * 31);
+  const p0 = new THREE.Vector3(Math.cos(baseAngle) * 16.2, 0, Math.sin(baseAngle) * 16.2);
+  const p1 = new THREE.Vector3(Math.cos(baseAngle + 0.18) * 24, isUp ? 8 : -8, Math.sin(baseAngle + 0.18) * 24);
+  const p2 = new THREE.Vector3(Math.cos(baseAngle + 0.4) * 34, isUp ? 4 : -4, Math.sin(baseAngle + 0.4) * 34);
+  const p3 = new THREE.Vector3(Math.cos(baseAngle + 0.65) * 39, isUp ? -8 : 8, Math.sin(baseAngle + 0.65) * 39);
+  const p4 = new THREE.Vector3(Math.cos(baseAngle + 0.9) * 32, isUp ? -16 : 16, Math.sin(baseAngle + 0.9) * 32);
 
   const curve = new THREE.CatmullRomCurve3([p0, p1, p2, p3, p4]);
   const filGeo = new THREE.TubeGeometry(curve, 28, 0.35, 8, false);
@@ -1164,7 +1457,7 @@ class BioluminescentSpecimen {
       tentacle.tipPearl.position.copy(tentacle.points[TENTACLE_SEGS]);
     });
 
-    // 4. Central Flower Fluid Motion
+    // 4. Central Flower & Ctenophore Iridescent Core Motion
     const petalWobble = 1.0 + 0.05 * Math.sin(t * 3.0);
     petalGroup.scale.set(petalWobble, 1.0, petalWobble);
 
@@ -1173,16 +1466,52 @@ class BioluminescentSpecimen {
       fil.mesh.rotation.x = Math.cos(t * 1.6 + idx * 0.4) * 0.10;
     });
 
+    // Ctenophore Dynamic Pulse & Cilia Rainbow Waves
+    let ctenoPulseSpeed = 1.0;
+    if (this.mode === 'HUNT') ctenoPulseSpeed = 2.4;
+    else if (this.mode === 'PULSE') ctenoPulseSpeed = 3.2;
+    else if (this.mode === 'CRAWL') ctenoPulseSpeed = 0.65;
+
+    ctenophoreMembraneMat.uniforms.uTime.value = t;
+    ctenophoreMembraneMat.uniforms.uPulseSpeed.value = ctenoPulseSpeed;
+
+    const capsuleBreath = 1.0 + 0.035 * Math.sin(t * 2.5);
+    ctenophoreCapsuleMesh.scale.set(capsuleBreath, breathY, capsuleBreath);
+    ctenoRibGroup.scale.set(capsuleBreath, breathY, capsuleBreath);
+    radialCanalGroup.scale.set(capsuleBreath, 1.0, capsuleBreath);
+
+    // Dynamic Rainbow Micro-ctene Beads along 8 ribs (800x.jpg 橫向微櫛板脈衝波)
+    ctenoBeads.forEach(b => {
+      const phase = t * 1.2 * ctenoPulseSpeed - b.u * 2.2 + b.ribIndex * 0.125;
+      const col = getSpectrumColor(phase);
+      b.mat.emissive.copy(col);
+      const pulseScale = 1.0 + 0.35 * Math.pow(Math.max(0.0, Math.sin(phase * TAU)), 2.0);
+      b.mesh.scale.set(pulseScale, pulseScale, pulseScale);
+    });
+
+    // Trailing Ctenophore Silk Filament Sinusoidal Sway (800x.jpg 底部微光拖曳絲)
+    for (let j = 0; j <= CTENO_SILK_SEGS; j++) {
+      const s = j / CTENO_SILK_SEGS;
+      const lag = t * 2.5 - s * 4.2;
+      const swayX = Math.sin(lag) * (18.0 * Math.pow(s, 1.4));
+      const swayZ = Math.cos(lag * 0.85) * (14.0 * Math.pow(s, 1.4));
+      const curY = ctenoSilkStartY - s * 135.0;
+      ctenoSilkPts[j].set(swayX, curY, swayZ);
+    }
+    ctenoSilkMesh.geometry.dispose();
+    ctenoSilkMesh.geometry = new THREE.TubeGeometry(ctenoSilkCurve, 36, 0.35, 8, false);
+    ctenoSilkTipBead.position.copy(ctenoSilkPts[CTENO_SILK_SEGS]);
+
     // 5. Shader Updates
     bellGradientMat.uniforms.uTime.value = t;
     bellGradientMat.uniforms.uWaveAmp.value = this.waveAmplitude;
     snowMat.uniforms.uTime.value = t;
 
     const lumenRatio = this.glowIntensity / 255.0;
-    bioLightCenter.intensity = 320 * lumenRatio;
+    bioLightCenter.intensity = 80 * lumenRatio;
     upperBell.rimLight.intensity = 180 * lumenRatio;
     lowerBell.rimLight.intensity = 180 * lumenRatio;
-    bloomPass.strength = 0.80 + 0.25 * lumenRatio;
+    bloomPass.strength = 0.72 + 0.18 * lumenRatio;
   }
 }
 
@@ -1257,6 +1586,9 @@ function updatePalette() {
   bellGradientMat.uniforms.uColorRim.value.copy(P.membraneRim);
   bellGradientMat.uniforms.uColorCore.value.copy(P.membraneCore);
 
+  ctenophoreMembraneMat.uniforms.uColorBase.value.copy(P.membraneBase);
+  ctenophoreMembraneMat.uniforms.uColorRim.value.copy(P.membraneRim);
+
   beadOuterMat.emissive.copy(P.beadEmissive);
   upperBell.rimLight.color.set(P.beadLight);
   lowerBell.rimLight.color.set(P.beadLight);
@@ -1277,6 +1609,7 @@ function toggleWireframe() {
   document.getElementById('wireframe-text').innerText = isWireframeMode ? '脈絡: 骨架線框模式' : '脈絡: 晶透凝膠漸層';
 
   bellGradientMat.wireframe = isWireframeMode;
+  ctenophoreMembraneMat.wireframe = isWireframeMode;
   spineSheathMat.wireframe = isWireframeMode;
   petalMat.wireframe = isWireframeMode;
 }
