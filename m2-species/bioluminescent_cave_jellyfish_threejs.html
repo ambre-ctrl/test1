@@ -1429,6 +1429,627 @@ jellyfishList.push(createJellyfish(speciesPalettes[0], new THREE.Vector3(-190, 2
 jellyfishList.push(createJellyfish(speciesPalettes[1], new THREE.Vector3(195, -30, -35), new THREE.Vector3(-0.6, -0.3, 0.7)));
 jellyfishList.push(createJellyfish(speciesPalettes[2], new THREE.Vector3(0, 65, 95), new THREE.Vector3(0.2, -0.5, -0.8)));
 
+// =============================================================
+// 【泥炭發酵蠕蟲】(Peat Fermentation Worm)
+// 多節段幾何軟體 / 無血紅素銅基半透明生物 / 星狀化學感受器 / 硫磺結晶沉澱
+// =============================================================
+
+const peatWormSkinShader = {
+  uniforms: {
+    uTime: { value: 0 },
+    uColorBase: { value: new THREE.Color(0x0a3820) },    // Translucent Jade green
+    uColorRim: { value: new THREE.Color(0x4ade80) },     // Milky emerald rim Fresnel
+    uColorFluid: { value: new THREE.Color(0x22c55e) },   // Flowing copper-protein fluid
+    uBurstK: { value: 0.0 }
+  },
+  vertexShader: `
+    varying vec3 vNormal;
+    varying vec3 vViewPosition;
+    varying vec3 vWorldPosition;
+    varying vec2 vUv;
+
+    void main() {
+      vUv = uv;
+      vNormal = normalize(normalMatrix * normal);
+      vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+      vViewPosition = -mvPosition.xyz;
+      vWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;
+      gl_Position = projectionMatrix * mvPosition;
+    }
+  `,
+  fragmentShader: `
+    uniform float uTime;
+    uniform vec3 uColorBase;
+    uniform vec3 uColorRim;
+    uniform vec3 uColorFluid;
+    uniform float uBurstK;
+
+    varying vec3 vNormal;
+    varying vec3 vViewPosition;
+    varying vec3 vWorldPosition;
+    varying vec2 vUv;
+
+    void main() {
+      vec3 N = normalize(vNormal);
+      vec3 V = normalize(vViewPosition);
+      float NdotV = abs(dot(N, V));
+
+      // Thin bio-glass slime sheath Fresnel (生物琉璃黏液薄膜)
+      float fresnel = pow(clamp(1.0 - NdotV, 0.0, 1.0), 2.2);
+
+      // Annular muscular segment ridges (42 個緊密環狀肌肉節段)
+      float segFrac = fract(vUv.x * 42.0);
+      float ridge = smoothstep(0.06, 0.5, segFrac) * smoothstep(0.94, 0.5, segFrac);
+      float groove = 1.0 - smoothstep(0.0, 0.14, min(segFrac, 1.0 - segFrac));
+
+      // Translucent Jade body tone with copper-protein fluid
+      vec3 jade = mix(uColorBase, uColorFluid, 0.45 + 0.35 * ridge);
+      jade = mix(jade, uColorRim, fresnel * 0.92);
+
+      // Semi-fluid bio-glass slime sheath (高光琉璃濕潤黏液)
+      float slimeSheen = pow(fresnel, 3.6) * 2.4;
+      vec3 slimeColor = vec3(0.80, 1.0, 0.90) * slimeSheen;
+
+      // Darkened constriction in the annular grooves
+      jade *= (1.0 - groove * 0.35);
+
+      // Faint chemiluminescent pulse in copper-based lymph fluid
+      float chemPulse = 0.5 + 0.5 * sin(uTime * 3.2 - vUv.x * 14.0);
+      vec3 chemGlow = uColorRim * chemPulse * (0.45 + 0.85 * uBurstK);
+
+      vec3 finalCol = jade + slimeColor + chemGlow;
+      // High translucency so internal inky gut and peat boluses shine through clearly!
+      float alpha = 0.32 + 0.52 * fresnel + 0.10 * (1.0 - ridge);
+      alpha = clamp(alpha, 0.0, 0.86);
+
+      gl_FragColor = vec4(finalCol, alpha);
+    }
+  `
+};
+
+const fermentationGutShader = {
+  uniforms: {
+    uTime: { value: 0 },
+    uColorGut: { value: new THREE.Color(0x021609) },     // Inky deep forest black-green
+    uColorPeat: { value: new THREE.Color(0x000501) },    // Digesting black peat sludge
+    uColorMethane: { value: new THREE.Color(0xa3e635) }, // Fermenting methane / sulfur chemical glow
+    uBurstK: { value: 0.0 }
+  },
+  vertexShader: `
+    varying vec3 vNormal;
+    varying vec2 vUv;
+    varying vec3 vViewPosition;
+
+    void main() {
+      vUv = uv;
+      vNormal = normalize(normalMatrix * normal);
+      vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+      vViewPosition = -mvPosition.xyz;
+      gl_Position = projectionMatrix * mvPosition;
+    }
+  `,
+  fragmentShader: `
+    uniform float uTime;
+    uniform vec3 uColorGut;
+    uniform vec3 uColorPeat;
+    uniform vec3 uColorMethane;
+    uniform float uBurstK;
+
+    varying vec3 vNormal;
+    varying vec2 vUv;
+    varying vec3 vViewPosition;
+
+    void main() {
+      // Peristaltic sludge boluses traveling along gut (蠕動波吞食泥炭)
+      float bolusWave = sin(uTime * 3.0 - vUv.x * 18.0);
+      float bolus = smoothstep(0.20, 0.80, bolusWave * 0.5 + 0.5);
+
+      // Digesting black peat chunks and sulfurous fermentation gas
+      vec3 gutBase = mix(uColorGut, uColorPeat, bolus * 0.8);
+
+      // Micro methane / sulfur pockets with chemical luminescence
+      float methanePulse = pow(clamp(sin(uTime * 4.5 - vUv.x * 28.0), 0.0, 1.0), 2.5);
+      vec3 methaneGlow = uColorMethane * methanePulse * (1.1 + 1.8 * uBurstK);
+
+      vec3 finalCol = gutBase + methaneGlow;
+      gl_FragColor = vec4(finalCol, 0.98);
+    }
+  `
+};
+
+function createPeatFermentationWorm(spawnPos) {
+  const root = new THREE.Group();
+  scene.add(root);
+
+  const NUM_NODES = 42;
+  const RADIAL_SEGS = 16;
+  const SEG_LEN = 5.4; // Total length ~230 units
+
+  // Initialize spine chain spread out laterally for prominent visibility
+  const nodes = [];
+  for (let i = 0; i <= NUM_NODES; i++) {
+    nodes.push(new THREE.Vector3(
+      spawnPos.x - i * SEG_LEN * 0.85,
+      spawnPos.y + Math.sin(i * 0.25) * 6.0,
+      spawnPos.z + i * SEG_LEN * 0.35
+    ));
+  }
+
+  // Pre-calculate indices for outer skin and inner gut
+  const vertCount = (NUM_NODES + 1) * (RADIAL_SEGS + 1);
+  const skinPositions = new Float32Array(vertCount * 3);
+  const skinNormals = new Float32Array(vertCount * 3);
+  const skinUvs = new Float32Array(vertCount * 2);
+
+  const gutPositions = new Float32Array(vertCount * 3);
+  const gutNormals = new Float32Array(vertCount * 3);
+  const gutUvs = new Float32Array(vertCount * 2);
+
+  const indices = [];
+  for (let i = 0; i < NUM_NODES; i++) {
+    for (let j = 0; j < RADIAL_SEGS; j++) {
+      const a = i * (RADIAL_SEGS + 1) + j;
+      const b = (i + 1) * (RADIAL_SEGS + 1) + j;
+      const c = (i + 1) * (RADIAL_SEGS + 1) + (j + 1);
+      const d = i * (RADIAL_SEGS + 1) + (j + 1);
+      indices.push(a, b, d);
+      indices.push(b, c, d);
+    }
+  }
+
+  // Initialize UVs
+  for (let i = 0; i <= NUM_NODES; i++) {
+    const u = i / NUM_NODES;
+    for (let j = 0; j <= RADIAL_SEGS; j++) {
+      const v = j / RADIAL_SEGS;
+      const idx = (i * (RADIAL_SEGS + 1) + j) * 2;
+      skinUvs[idx] = u;
+      skinUvs[idx + 1] = v;
+      gutUvs[idx] = u;
+      gutUvs[idx + 1] = v;
+    }
+  }
+
+  const skinGeo = new THREE.BufferGeometry();
+  skinGeo.setAttribute('position', new THREE.BufferAttribute(skinPositions, 3));
+  skinGeo.setAttribute('normal', new THREE.BufferAttribute(skinNormals, 3));
+  skinGeo.setAttribute('uv', new THREE.BufferAttribute(skinUvs, 2));
+  skinGeo.setIndex(indices);
+
+  const skinMat = new THREE.ShaderMaterial({
+    uniforms: THREE.UniformsUtils.clone(peatWormSkinShader.uniforms),
+    vertexShader: peatWormSkinShader.vertexShader,
+    fragmentShader: peatWormSkinShader.fragmentShader,
+    transparent: true,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+    blending: THREE.NormalBlending
+  });
+
+  const skinMesh = new THREE.Mesh(skinGeo, skinMat);
+  root.add(skinMesh);
+
+  // Inner fermentation gut mesh
+  const gutGeo = new THREE.BufferGeometry();
+  gutGeo.setAttribute('position', new THREE.BufferAttribute(gutPositions, 3));
+  gutGeo.setAttribute('normal', new THREE.BufferAttribute(gutNormals, 3));
+  gutGeo.setAttribute('uv', new THREE.BufferAttribute(gutUvs, 2));
+  gutGeo.setIndex(indices);
+
+  const gutMat = new THREE.ShaderMaterial({
+    uniforms: THREE.UniformsUtils.clone(fermentationGutShader.uniforms),
+    vertexShader: fermentationGutShader.vertexShader,
+    fragmentShader: fermentationGutShader.fragmentShader,
+    transparent: true,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+    blending: THREE.NormalBlending
+  });
+
+  const gutMesh = new THREE.Mesh(gutGeo, gutMat);
+  root.add(gutMesh);
+
+  // Head Assembly (Eyeless, Star-shaped Chemoreceptor Mouth + 8 Palps)
+  const headGroup = new THREE.Group();
+  root.add(headGroup);
+
+  // Star cleft rim: 6-pointed star cavity
+  const starCleftGroup = new THREE.Group();
+  headGroup.add(starCleftGroup);
+
+  const starRidgeMat = new THREE.MeshStandardMaterial({
+    color: 0x052e16,
+    emissive: 0x14532d,
+    emissiveIntensity: 0.9,
+    roughness: 0.35
+  });
+
+  for (let k = 0; k < 6; k++) {
+    const ang = (k / 6) * TAU;
+    const foldMesh = new THREE.Mesh(new THREE.ConeGeometry(1.2, 4.0, 4), starRidgeMat);
+    foldMesh.position.set(Math.cos(ang) * 2.2, Math.sin(ang) * 2.2, -1.2);
+    foldMesh.rotation.z = ang - Math.PI / 2;
+    foldMesh.rotation.x = -Math.PI / 2;
+    starCleftGroup.add(foldMesh);
+  }
+
+  // 8 Chemosensory Palps around the star mouth
+  const palps = [];
+  const palpMat = makeGlowTubeMaterial(0x86efac, 2.5, 1.4, 4.2, 0, 1.0, 0.95);
+  const palpTipMat = new THREE.MeshBasicMaterial({ color: 0xdcfce7 });
+
+  for (let k = 0; k < 8; k++) {
+    const ang = (k / 8) * TAU;
+    const palpBase = new THREE.Group();
+    headGroup.add(palpBase);
+
+    // Palp curve extending forward and outward
+    const pts = [
+      new THREE.Vector3(Math.cos(ang) * 3.6, Math.sin(ang) * 3.6, 0),
+      new THREE.Vector3(Math.cos(ang) * 5.4, Math.sin(ang) * 5.4, 5.2),
+      new THREE.Vector3(Math.cos(ang) * 6.8, Math.sin(ang) * 6.8, 10.2)
+    ];
+    const curve = new THREE.CatmullRomCurve3(pts);
+    const pMesh = new THREE.Mesh(new THREE.TubeGeometry(curve, 10, 0.36, 6, false), palpMat);
+    palpBase.add(pMesh);
+
+    const tipPearl = new THREE.Mesh(new THREE.SphereGeometry(0.72, 8, 8), palpTipMat);
+    tipPearl.position.copy(pts[2]);
+    palpBase.add(tipPearl);
+
+    palps.push({ baseGroup: palpBase, baseAngle: ang, pts, pMesh, tipPearl });
+  }
+
+  // Sulfur Crystals (Solid yellow sulfur granules adhering to flanks and tail)
+  const sulfurCrystals = [];
+  const crystalMat = new THREE.MeshStandardMaterial({
+    color: 0xfde047,
+    roughness: 0.22,
+    metalness: 0.48,
+    emissive: new THREE.Color(0xb45309),
+    emissiveIntensity: 1.15
+  });
+
+  // Internal Visceral Light for the Jade Worm
+  const wormBioLight = new THREE.PointLight(0x4ade80, 24, 220, 2.0);
+  root.add(wormBioLight);
+
+  const NUM_CRYSTALS = 36;
+  for (let c = 0; c < NUM_CRYSTALS; c++) {
+    // 22 on lateral flanks (nodes 8-32), 14 on posterior tail (nodes 33-41)
+    const isTail = c >= 22;
+    const nodeIdx = isTail
+      ? Math.floor(THREE.MathUtils.randFloat(33, 41))
+      : Math.floor(THREE.MathUtils.randFloat(8, 32));
+
+    // Flanks: angle ~ ±PI/2; Tail: full circle
+    const flankSign = (c % 2 === 0) ? 1 : -1;
+    const latAngle = isTail
+      ? Math.random() * TAU
+      : flankSign * (Math.PI * 0.5) + THREE.MathUtils.randFloat(-0.35, 0.35);
+
+    const scale = THREE.MathUtils.randFloat(1.3, 2.4);
+    const crystalMesh = new THREE.Mesh(new THREE.OctahedronGeometry(scale, 0), crystalMat);
+    root.add(crystalMesh);
+
+    sulfurCrystals.push({
+      mesh: crystalMesh,
+      nodeIdx,
+      latAngle,
+      scale,
+      rotOffset: new THREE.Euler(Math.random() * TAU, Math.random() * TAU, Math.random() * TAU)
+    });
+  }
+
+  // Chemical Methane / Sulfur Micro-Motes (Exudate particles)
+  const MOTE_COUNT = 75;
+  const motePos = new Float32Array(MOTE_COUNT * 3);
+  const moteData = [];
+  for (let m = 0; m < MOTE_COUNT; m++) {
+    motePos[m * 3] = spawnPos.x;
+    motePos[m * 3 + 1] = spawnPos.y;
+    motePos[m * 3 + 2] = spawnPos.z;
+    moteData.push({
+      life: Math.random(),
+      speedY: THREE.MathUtils.randFloat(0.18, 0.52),
+      driftX: THREE.MathUtils.randFloat(-0.25, 0.25),
+      driftZ: THREE.MathUtils.randFloat(-0.25, 0.25)
+    });
+  }
+  const moteGeo = new THREE.BufferGeometry();
+  moteGeo.setAttribute('position', new THREE.BufferAttribute(motePos, 3));
+  const moteMat = new THREE.ShaderMaterial({
+    uniforms: { uTime: { value: 0 }, uColor: { value: new THREE.Color(0xa3e635) } },
+    vertexShader: `
+      uniform float uTime;
+      void main() {
+        vec4 mv = modelViewMatrix * vec4(position, 1.0);
+        gl_Position = projectionMatrix * mv;
+        gl_PointSize = max(1.2, 3.8 * (240.0 / -mv.z));
+      }
+    `,
+    fragmentShader: `
+      uniform vec3 uColor;
+      void main() {
+        vec2 c = gl_PointCoord - 0.5;
+        if (length(c) > 0.5) discard;
+        float a = smoothstep(0.5, 0.05, length(c)) * 0.65;
+        gl_FragColor = vec4(uColor * 1.6, a);
+      }
+    `,
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending
+  });
+  const motePoints = new THREE.Points(moteGeo, moteMat);
+  root.add(motePoints);
+
+  // Dynamic worm state
+  const state = {
+    pos: spawnPos.clone(),
+    vel: new THREE.Vector3(0.65, 0.05, 0.35),
+    time: Math.random() * 20,
+    seed: Math.random() * 100,
+    burstTime: 0,
+    burstEnergy: 0,
+    peristalsisPhase: 0,
+    serpentinePhase: 0
+  };
+
+  const headDesired = new THREE.Vector3();
+  const upRef = new THREE.Vector3(0, 1, 0);
+
+  function update(dt) {
+    state.time += dt;
+
+    if (state.burstTime > 0) {
+      state.burstTime = Math.max(0, state.burstTime - dt);
+    }
+    const targetEnergy = state.burstTime > 0 ? 1 : 0;
+    const easeRate = targetEnergy > state.burstEnergy ? 4.8 : 1.0;
+    state.burstEnergy += (targetEnergy - state.burstEnergy) * (1 - Math.exp(-easeRate * dt));
+
+    const burstK = state.burstEnergy;
+
+    // Movement rates
+    const serpRate = 2.4 + burstK * 4.6;
+    state.serpentinePhase += dt * serpRate;
+    state.peristalsisPhase += dt * (2.8 + burstK * 4.2);
+
+    // Head 3D steering in lower cavern
+    const t = state.time;
+    const s = state.seed;
+    const hx = Math.sin(t * 0.20 + s) * 0.75 + Math.sin(t * 0.09 + s * 1.6) * 0.35;
+    const hy = Math.sin(t * 0.14 + s * 0.8) * 0.35 + Math.sin(t * 0.06 + s * 2.2) * 0.22;
+    const hz = Math.cos(t * 0.18 + s * 1.2) * 0.75 + Math.cos(t * 0.10 + s * 2.7) * 0.35;
+
+    headDesired.set(hx, hy, hz);
+
+    // Soft boundary containment in bottom cavern
+    const curR = Math.hypot(state.pos.x, state.pos.z);
+    if (curR > 340 * 0.65) {
+      const edgeFactor = THREE.MathUtils.smoothstep(curR, 340 * 0.65, 340 * 0.98);
+      headDesired.x = THREE.MathUtils.lerp(headDesired.x, -state.pos.x / curR * 1.5, edgeFactor);
+      headDesired.z = THREE.MathUtils.lerp(headDesired.z, -state.pos.z / curR * 1.5, edgeFactor);
+    }
+
+    // Keep worm in the lower-middle peat layer: Y in [-165, -50]
+    const targetYCenter = -105;
+    const dyFromCenter = state.pos.y - targetYCenter;
+    if (Math.abs(dyFromCenter) > 42) {
+      const edgeY = THREE.MathUtils.smoothstep(Math.abs(dyFromCenter), 42, 65);
+      headDesired.y = THREE.MathUtils.lerp(headDesired.y, -Math.sign(dyFromCenter) * 1.2, edgeY);
+    }
+
+    headDesired.normalize();
+
+    // Speed: crawling slow to rapid burst undulation
+    const cruiseSpeed = 0.75 + 0.25 * Math.sin(t * 0.4 + s);
+    const speed = cruiseSpeed + (3.4 - cruiseSpeed) * burstK;
+    headDesired.multiplyScalar(speed);
+
+    state.vel.lerp(headDesired, 1 - Math.exp(-2.5 * dt));
+    state.pos.addScaledVector(state.vel, dt * 60);
+
+    // Move Head (Node 0)
+    nodes[0].copy(state.pos);
+
+    // Follow-the-leader chain update with serpentine undulation wave
+    const serpAmp = 1.6 + burstK * 0.9;
+    for (let i = 1; i <= NUM_NODES; i++) {
+      const prev = nodes[i - 1];
+      const curr = nodes[i];
+
+      const toPrev = new THREE.Vector3().subVectors(prev, curr);
+      const dist = toPrev.length();
+      if (dist > 1e-4) toPrev.normalize();
+      else toPrev.set(0, 0, 1);
+
+      // Lateral serpentine wave displacement
+      const lateralVec = new THREE.Vector3().crossVectors(toPrev, upRef);
+      if (lateralVec.lengthSq() > 1e-4) lateralVec.normalize();
+      else lateralVec.set(1, 0, 0);
+
+      const waveAngle = state.serpentinePhase - i * 0.32;
+      const waveOffset = Math.sin(waveAngle) * serpAmp;
+
+      const targetPos = prev.clone().sub(toPrev.multiplyScalar(SEG_LEN));
+      targetPos.addScaledVector(lateralVec, waveOffset * dt * 32);
+
+      curr.lerp(targetPos, 0.48);
+    }
+
+    // Update Exudate motes trailing behind
+    const posAttr = moteGeo.attributes.position;
+    for (let m = 0; m < MOTE_COUNT; m++) {
+      moteData[m].life += dt * 0.55;
+      if (moteData[m].life > 1.0) {
+        moteData[m].life = 0;
+        // Respawn near middle or tail
+        const spawnIdx = Math.floor(THREE.MathUtils.randFloat(18, NUM_NODES));
+        const spawnNode = nodes[spawnIdx];
+        posAttr.setXYZ(m, spawnNode.x + THREE.MathUtils.randFloat(-2.5, 2.5), spawnNode.y + THREE.MathUtils.randFloat(-2.5, 2.5), spawnNode.z + THREE.MathUtils.randFloat(-2.5, 2.5));
+      } else {
+        const cx = posAttr.getX(m) + moteData[m].driftX * dt * 10;
+        const cy = posAttr.getY(m) + moteData[m].speedY * dt * 15;
+        const cz = posAttr.getZ(m) + moteData[m].driftZ * dt * 10;
+        posAttr.setXYZ(m, cx, cy, cz);
+      }
+    }
+    posAttr.needsUpdate = true;
+  }
+
+  function animate(t, dt) {
+    const burstK = state.burstEnergy;
+
+    // Update Head Orientation & Palp Twitching
+    const headTangent = new THREE.Vector3().subVectors(nodes[0], nodes[1]);
+    if (headTangent.lengthSq() > 1e-4) headTangent.normalize();
+    else headTangent.set(0, 0, 1);
+
+    headGroup.position.copy(nodes[0]);
+    headGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), headTangent);
+
+    // Active sensory palp twitching
+    palps.forEach((palp, idx) => {
+      const twitchSpeed = 4.5 + burstK * 6.0;
+      const twitchAngleX = Math.sin(t * twitchSpeed + idx * 1.5) * (0.30 + 0.22 * burstK);
+      const twitchAngleY = Math.cos(t * twitchSpeed * 0.8 + idx * 2.1) * (0.30 + 0.22 * burstK);
+      palp.baseGroup.rotation.set(twitchAngleX, twitchAngleY, 0);
+    });
+
+    // Reconstruct Worm Skin and Gut Tube along dynamic spine nodes
+    const skinPosAttr = skinGeo.attributes.position;
+    const skinNormAttr = skinGeo.attributes.normal;
+    const gutPosAttr = gutGeo.attributes.position;
+    const gutNormAttr = gutGeo.attributes.normal;
+
+    // Parallel transport frame initialization
+    let curNormal = new THREE.Vector3(0, 1, 0);
+    const tangents = [];
+    const normals = [];
+    const binormals = [];
+
+    for (let i = 0; i <= NUM_NODES; i++) {
+      let tang;
+      if (i === 0) tang = new THREE.Vector3().subVectors(nodes[0], nodes[1]);
+      else if (i === NUM_NODES) tang = new THREE.Vector3().subVectors(nodes[NUM_NODES - 1], nodes[NUM_NODES]);
+      else tang = new THREE.Vector3().subVectors(nodes[i - 1], nodes[i + 1]);
+
+      if (tang.lengthSq() > 1e-5) tang.normalize();
+      else tang.set(0, 0, 1);
+      tangents.push(tang);
+
+      // Project curNormal onto orthogonal plane
+      curNormal.sub(tang.clone().multiplyScalar(curNormal.dot(tang)));
+      if (curNormal.lengthSq() > 1e-5) curNormal.normalize();
+      else curNormal.set(0, 1, 0);
+      normals.push(curNormal.clone());
+
+      const binorm = new THREE.Vector3().crossVectors(tang, curNormal).normalize();
+      binormals.push(binorm);
+    }
+
+    // Populate Skin and Gut geometry
+    for (let i = 0; i <= NUM_NODES; i++) {
+      const u = i / NUM_NODES;
+      const P = nodes[i];
+      const N_vec = normals[i];
+      const B_vec = binormals[i];
+
+      // Anatomical tapering profile:
+      // Head (u=0) tapers gracefully; Tail (u=1) tapers to a slender blunt tip
+      const taper = Math.sin(Math.pow(u, 0.65) * Math.PI);
+      const baseR = 2.4 + 5.2 * taper;
+
+      // Annular muscular ring bulges (42 環狀肌肉節段)
+      const ringBulge = 1.0 + 0.18 * Math.sin(u * 42.0 * TAU);
+
+      // Peristaltic traveling contraction wave (環狀肌蠕動波)
+      const peristalsis = 1.0 + (0.24 + 0.14 * burstK) * Math.sin(state.peristalsisPhase - u * 18.0);
+
+      const outerR = Math.max(1.0, baseR * ringBulge * peristalsis);
+      const gutR = Math.max(0.48, outerR * 0.52);
+
+      for (let j = 0; j <= RADIAL_SEGS; j++) {
+        const v = j / RADIAL_SEGS;
+        const theta = v * TAU;
+        const cosT = Math.cos(theta);
+        const sinT = Math.sin(theta);
+
+        // Radial vector
+        const radX = cosT * N_vec.x + sinT * B_vec.x;
+        const radY = cosT * N_vec.y + sinT * B_vec.y;
+        const radZ = cosT * N_vec.z + sinT * B_vec.z;
+
+        const vertIdx = i * (RADIAL_SEGS + 1) + j;
+
+        // Outer Skin Vertex
+        skinPosAttr.setXYZ(vertIdx, P.x + outerR * radX, P.y + outerR * radY, P.z + outerR * radZ);
+        skinNormAttr.setXYZ(vertIdx, radX, radY, radZ);
+
+        // Inner Fermentation Gut Vertex
+        gutPosAttr.setXYZ(vertIdx, P.x + gutR * radX, P.y + gutR * radY, P.z + gutR * radZ);
+        gutNormAttr.setXYZ(vertIdx, radX, radY, radZ);
+      }
+
+      // Update attached Sulfur Crystals for this node
+      sulfurCrystals.forEach(sc => {
+        if (sc.nodeIdx === i) {
+          const cosT = Math.cos(sc.latAngle);
+          const sinT = Math.sin(sc.latAngle);
+          const radX = cosT * N_vec.x + sinT * B_vec.x;
+          const radY = cosT * N_vec.y + sinT * B_vec.y;
+          const radZ = cosT * N_vec.z + sinT * B_vec.z;
+
+          // Sit right on outer surface with crystal outward projection
+          const surfaceR = outerR + 0.55;
+          sc.mesh.position.set(P.x + surfaceR * radX, P.y + surfaceR * radY, P.z + surfaceR * radZ);
+          sc.mesh.lookAt(P.x + (surfaceR + 10) * radX, P.y + (surfaceR + 10) * radY, P.z + (surfaceR + 10) * radZ);
+          sc.mesh.rotation.z += sc.rotOffset.z;
+        }
+      });
+    }
+
+    skinPosAttr.needsUpdate = true;
+    skinNormAttr.needsUpdate = true;
+    gutPosAttr.needsUpdate = true;
+    gutNormAttr.needsUpdate = true;
+
+    // Update Material Uniforms & Internal Light
+    skinMat.uniforms.uTime.value = t;
+    skinMat.uniforms.uBurstK.value = burstK;
+    gutMat.uniforms.uTime.value = t;
+    gutMat.uniforms.uBurstK.value = burstK;
+    moteMat.uniforms.uTime.value = t;
+
+    // Center internal biolight along mid-abdomen (node 14)
+    wormBioLight.position.copy(nodes[14]);
+    wormBioLight.intensity = (22 + burstK * 28) * (0.85 + 0.15 * Math.sin(t * 3.0));
+  }
+
+  function burst() {
+    state.burstTime = 4.8;
+    if (state.vel.lengthSq() > 1e-4) {
+      state.vel.normalize().multiplyScalar(1.2);
+    }
+  }
+
+  return {
+    root,
+    state,
+    update,
+    animate,
+    burst,
+    isBursting: () => state.burstEnergy > 0.05
+  };
+}
+
+// -------------------------------------------------------------
+// Instantiate Peat Fermentation Worm in lower-middle cavern zone
+// -------------------------------------------------------------
+const peatWorm = createPeatFermentationWorm(new THREE.Vector3(60, -95, 75));
+
 // -------------------------------------------------------------
 // Web Audio Sub-Resonance Pulse (Ethereal Souls soundscape)
 // -------------------------------------------------------------
@@ -1494,6 +2115,7 @@ let burstActiveTimeout = null;
 
 function triggerBurst() {
   jellyfishList.forEach(j => j.burst());
+  peatWorm.burst();
   playBurstSound();
 
   // UI button animations & text flare
@@ -1543,8 +2165,12 @@ function renderLoop() {
   jellyfishList.forEach(j => j.update(dt));
   jellyfishList.forEach(j => j.animate(t, dt));
 
+  peatWorm.update(dt);
+  peatWorm.animate(t, dt);
+
   let anyBurst = false;
   jellyfishList.forEach(j => { if (j.isBursting()) anyBurst = true; });
+  if (peatWorm.isBursting()) anyBurst = true;
 
   // Dynamically accelerate snow motes and expand bloom in burst mode
   const targetMoteSpeed = anyBurst ? 2.6 : 1.0;
